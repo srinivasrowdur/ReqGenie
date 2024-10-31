@@ -1,0 +1,8 @@
+streamlit
+python-dotenv
+openai>=1.0.0
+swarm-ai
+langchain
+langgraph
+streamlit-chat
+pydantic 
