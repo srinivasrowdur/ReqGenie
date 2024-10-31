@@ -140,6 +140,14 @@ def create_agents():
 st.title("Requirement Analysis Genie")
 st.write("Enter a requirement and get detailed analysis")
 
+# Add language selector in sidebar
+st.sidebar.title("Settings")
+programming_language = st.sidebar.selectbox(
+    "Select Programming Language",
+    options=["Python", "Java", "Kotlin"],
+    index=0  # Python as default
+)
+
 # Input field
 requirement = st.text_input("Enter your requirement:")
 
@@ -187,6 +195,11 @@ if st.button("Analyze"):
 
                 Final Requirements:
                 {final_requirements.messages[-1]["content"]}
+
+                Programming Language:
+                {programming_language}
+
+                Please generate code in {programming_language}.
                 """
 
                 # Run test generator and code generator in parallel
@@ -237,8 +250,8 @@ if st.button("Analyze"):
                     st.write(test_cases.messages[-1]["content"])
 
                 with tabs[4]:
-                    st.subheader("Generated Python Code")
-                    st.code(generated_code.messages[-1]["content"], language="python")
+                    st.subheader(f"Generated {programming_language} Code")
+                    st.code(generated_code.messages[-1]["content"], language=programming_language.lower())
 
                 with tabs[5]:
                     st.subheader("Code Review Analysis")
