@@ -2,6 +2,8 @@ import streamlit as st
 from dotenv import load_dotenv
 import os
 from swarm import Swarm, Agent
+from streamlit_extras.stateful_button import button
+import time
 
 
 # Load environment variables
@@ -168,8 +170,12 @@ programming_language = st.sidebar.selectbox(
     index=0  # Python as default
 )
 
-# Input field
-requirement = st.text_input("Enter your requirement:")
+# Input field with default text
+requirement = st.text_input(
+    "Enter your requirement:",
+    value="Create a secure login screen with email and password authentication, including input validation and error handling.",
+    key="requirement_input"
+)
 
 def stream_content(tab_placeholder):
     """Improved streaming function with better UI"""
@@ -192,16 +198,19 @@ def stream_content(tab_placeholder):
     
     return handle_chunk, full_response
 
+# Define tab names as a constant
+TAB_NAMES = ["Requirements", "Validation", "Final Specs", "Test Cases", "Code", "Review"]
+
 if st.button("Analyze"):
     if requirement:
         try:
-            # Create agents
+            # Create agents first
             elaborator, validator, finalizer, test_generator, code_generator, code_reviewer = create_agents()
             
             # Create tabs
-            tabs = st.tabs(["Elaboration", "Validation", "Final Requirements", "Test Cases", "Generated Code", "Code Review"])
+            tabs = st.tabs([f"{name}" for name in TAB_NAMES])
             
-            # Elaboration with streaming
+            # Elaboration
             with tabs[0]:
                 st.subheader("Elaborated Requirements")
                 handle_chunk, elaboration_content = stream_content(tabs[0])
@@ -213,8 +222,9 @@ if st.button("Analyze"):
                 for chunk in elaboration_stream:
                     handle_chunk(chunk)
                 elaboration = ''.join(filter(None, elaboration_content))
+                st.sidebar.success("✅ Requirements Analysis Complete")
 
-            # Validation with streaming
+            # Validation
             with tabs[1]:
                 st.subheader("Validation Review")
                 handle_chunk, validation_content = stream_content(tabs[1])
@@ -226,8 +236,9 @@ if st.button("Analyze"):
                 for chunk in validation_stream:
                     handle_chunk(chunk)
                 validation = ''.join(filter(None, validation_content))
+                st.sidebar.success("✅ Validation Complete")
 
-            # Final requirements with streaming
+            # Final requirements
             final_context = f"""
             Original Requirement:
             {requirement}
@@ -250,6 +261,7 @@ if st.button("Analyze"):
                 for chunk in final_stream:
                     handle_chunk(chunk)
                 final_requirements = ''.join(filter(None, final_content))
+                st.sidebar.success("✅ Final Requirements Complete")
 
             # Generate test cases with streaming
             test_context = f"""
@@ -269,6 +281,7 @@ if st.button("Analyze"):
                 for chunk in test_stream:
                     handle_chunk(chunk)
                 test_cases = ''.join(filter(None, test_content))
+                st.sidebar.success("✅ Test Cases Generated")
 
             # Generate code with streaming
             with tabs[4]:
@@ -279,7 +292,8 @@ if st.button("Analyze"):
                 def handle_code_chunk(chunk):
                     if isinstance(chunk, dict) and "content" in chunk and chunk["content"]:
                         code_content.append(chunk["content"])
-                        code_placeholder.code(''.join(filter(None, code_content)), language=programming_language.lower())
+                        code_placeholder.code(''.join(filter(None, code_content)), 
+                                           language=programming_language.lower())
                 
                 code_stream = client.run(
                     agent=code_generator,
@@ -289,6 +303,7 @@ if st.button("Analyze"):
                 for chunk in code_stream:
                     handle_code_chunk(chunk)
                 generated_code = ''.join(filter(None, code_content))
+                st.sidebar.success("✅ Code Generated")
 
             # Code review with streaming
             review_context = f"""
@@ -307,6 +322,11 @@ if st.button("Analyze"):
                 )
                 for chunk in review_stream:
                     handle_chunk(chunk)
+                st.sidebar.success("✅ Code Review Complete")
 
+            # Show completion message
+            st.sidebar.success("✨ Analysis Complete!")
+            
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
+            st.sidebar.error("❌ Process failed")
