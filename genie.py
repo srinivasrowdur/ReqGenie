@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from swarm import Swarm, Agent
 
+
 # Load environment variables
 load_dotenv()
 
@@ -151,111 +152,142 @@ programming_language = st.sidebar.selectbox(
 # Input field
 requirement = st.text_input("Enter your requirement:")
 
+def stream_content(tab_placeholder):
+    """Improved streaming function with better UI"""
+    message_placeholder = tab_placeholder.empty()
+    full_response = []
+
+    def handle_chunk(chunk):
+        try:
+            if isinstance(chunk, dict):
+                if "content" in chunk and chunk["content"]:
+                    full_response.append(chunk["content"])
+            elif isinstance(chunk, str) and chunk:
+                full_response.append(chunk)
+            
+            # Only update UI if we have content
+            if full_response:
+                message_placeholder.markdown(''.join(filter(None, full_response)) + "▌")
+        except Exception as e:
+            st.error(f"Streaming error: {str(e)}")
+    
+    return handle_chunk, full_response
+
 if st.button("Analyze"):
     if requirement:
-        with st.spinner("Analyzing..."):
-            try:
-                # Create agents
-                elaborator, validator, finalizer, test_generator, code_generator, code_reviewer = create_agents()
-                
-                # Get elaboration
-                elaboration = client.run(
+        try:
+            # Create agents
+            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer = create_agents()
+            
+            # Create tabs
+            tabs = st.tabs(["Elaboration", "Validation", "Final Requirements", "Test Cases", "Generated Code", "Code Review"])
+            
+            # Elaboration with streaming
+            with tabs[0]:
+                st.subheader("Elaborated Requirements")
+                handle_chunk, elaboration_content = stream_content(tabs[0])
+                elaboration_stream = client.run(
                     agent=elaborator,
-                    messages=[{"role": "user", "content": requirement}]
+                    messages=[{"role": "user", "content": requirement}],
+                    stream=True
                 )
-                
-                # Get validation
-                validation = client.run(
+                for chunk in elaboration_stream:
+                    handle_chunk(chunk)
+                elaboration = ''.join(filter(None, elaboration_content))
+
+            # Validation with streaming
+            with tabs[1]:
+                st.subheader("Validation Review")
+                handle_chunk, validation_content = stream_content(tabs[1])
+                validation_stream = client.run(
                     agent=validator,
-                    messages=[{"role": "user", "content": elaboration.messages[-1]["content"]}]
+                    messages=[{"role": "user", "content": elaboration}],
+                    stream=True
                 )
+                for chunk in validation_stream:
+                    handle_chunk(chunk)
+                validation = ''.join(filter(None, validation_content))
 
-                # Prepare context for finalizer
-                final_context = f"""
-                Original Requirement:
-                {requirement}
+            # Final requirements with streaming
+            final_context = f"""
+            Original Requirement:
+            {requirement}
 
-                Elaborated Requirements:
-                {elaboration.messages[-1]["content"]}
+            Elaborated Requirements:
+            {elaboration}
 
-                Validation Feedback:
-                {validation.messages[-1]["content"]}
-                """
+            Validation Feedback:
+            {validation}
+            """
 
-                # Get final requirements
-                final_requirements = client.run(
+            with tabs[2]:
+                st.subheader("Final Requirements")
+                handle_chunk, final_content = stream_content(tabs[2])
+                final_stream = client.run(
                     agent=finalizer,
-                    messages=[{"role": "user", "content": final_context}]
+                    messages=[{"role": "user", "content": final_context}],
+                    stream=True
                 )
+                for chunk in final_stream:
+                    handle_chunk(chunk)
+                final_requirements = ''.join(filter(None, final_content))
 
-                # Generate test cases and code based on final requirements
-                test_context = f"""
-                Original Requirement:
-                {requirement}
+            # Generate test cases with streaming
+            test_context = f"""
+            Original Requirement: {requirement}
+            Final Requirements: {final_requirements}
+            Programming Language: {programming_language}
+            """
 
-                Final Requirements:
-                {final_requirements.messages[-1]["content"]}
-
-                Programming Language:
-                {programming_language}
-
-                Please generate code in {programming_language}.
-                """
-
-                # Run test generator and code generator in parallel
-                test_cases = client.run(
+            with tabs[3]:
+                st.subheader("Test Cases")
+                handle_chunk, test_content = stream_content(tabs[3])
+                test_stream = client.run(
                     agent=test_generator,
-                    messages=[{"role": "user", "content": test_context}]
+                    messages=[{"role": "user", "content": test_context}],
+                    stream=True
                 )
+                for chunk in test_stream:
+                    handle_chunk(chunk)
+                test_cases = ''.join(filter(None, test_content))
 
-                generated_code = client.run(
+            # Generate code with streaming
+            with tabs[4]:
+                st.subheader(f"Generated {programming_language} Code")
+                code_placeholder = tabs[4].empty()
+                code_content = []
+                
+                def handle_code_chunk(chunk):
+                    if isinstance(chunk, dict) and "content" in chunk and chunk["content"]:
+                        code_content.append(chunk["content"])
+                        code_placeholder.code(''.join(filter(None, code_content)), language=programming_language.lower())
+                
+                code_stream = client.run(
                     agent=code_generator,
-                    messages=[{"role": "user", "content": test_context}]
+                    messages=[{"role": "user", "content": test_context}],
+                    stream=True
                 )
-                
-                # Get code review
-                review_context = f"""
-                Requirements:
-                {final_requirements.messages[-1]["content"]}
+                for chunk in code_stream:
+                    handle_code_chunk(chunk)
+                generated_code = ''.join(filter(None, code_content))
 
-                Generated Code:
-                {generated_code.messages[-1]["content"]}
+            # Code review with streaming
+            review_context = f"""
+            Requirements: {final_requirements}
+            Generated Code: {generated_code}
+            Test Cases: {test_cases}
+            """
 
-                Test Cases:
-                {test_cases.messages[-1]["content"]}
-                """
-
-                code_review = client.run(
+            with tabs[5]:
+                st.subheader("Code Review Analysis")
+                handle_chunk, review_content = stream_content(tabs[5])
+                review_stream = client.run(
                     agent=code_reviewer,
-                    messages=[{"role": "user", "content": review_context}]
+                    messages=[{"role": "user", "content": review_context}],
+                    stream=True
                 )
+                for chunk in review_stream:
+                    handle_chunk(chunk)
 
-                # Display results with tabs
-                tabs = st.tabs(["Elaboration", "Validation", "Final Requirements", "Test Cases", "Generated Code", "Code Review"])
-                
-                with tabs[0]:
-                    st.subheader("Elaborated Requirements")
-                    st.write(elaboration.messages[-1]["content"])
-                
-                with tabs[1]:
-                    st.subheader("Validation Review")
-                    st.write(validation.messages[-1]["content"])
-
-                with tabs[2]:
-                    st.subheader("Final Requirements")
-                    st.write(final_requirements.messages[-1]["content"])
-
-                with tabs[3]:
-                    st.subheader("Test Cases")
-                    st.write(test_cases.messages[-1]["content"])
-
-                with tabs[4]:
-                    st.subheader(f"Generated {programming_language} Code")
-                    st.code(generated_code.messages[-1]["content"], language=programming_language.lower())
-
-                with tabs[5]:
-                    st.subheader("Code Review Analysis")
-                    st.write(code_review.messages[-1]["content"])
-                
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
