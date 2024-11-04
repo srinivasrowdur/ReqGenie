@@ -16,8 +16,10 @@ client = Swarm()
 def create_agents():
     elaborator = Agent(
         name="Requirement Elaborator",
-        instructions="""You are a requirement analysis expert. When given a single line requirement:
-        1. Expand it into detailed functional requirements
+        instructions="""You are a requirement analysis expert. When given a single line requirement and application type:
+        1. Expand it into detailed functional requirements, considering:
+           - If Web Application: UI/UX, frontend components, user interactions
+           - If Web Service: API endpoints, data formats, integration points
         2. List any assumptions made
         3. Identify potential edge cases
         4. Suggest acceptance criteria""",
@@ -164,11 +166,19 @@ st.write("Enter a requirement and get detailed analysis")
 
 # Add language selector in sidebar
 st.sidebar.title("Settings")
-programming_language = st.sidebar.selectbox(
-    "Select Programming Language",
-    options=["Python", "Java", "Kotlin"],
-    index=0  # Python as default
-)
+
+# Add these in the sidebar, probably near where you have the language selector
+with st.sidebar:
+    app_type = st.selectbox(
+        "Select Application Type",
+        ["Web Application", "Web Service"],
+        key="app_type"
+    )
+    programming_language = st.selectbox(
+        "Select Programming Language",
+        ["Python", "JavaScript", "Java", "C#"],
+        key="language"
+    )
 
 # Input field with default text
 requirement = st.text_input(
@@ -216,7 +226,7 @@ if st.button("Analyze"):
                 handle_chunk, elaboration_content = stream_content(tabs[0])
                 elaboration_stream = client.run(
                     agent=elaborator,
-                    messages=[{"role": "user", "content": requirement}],
+                    messages=[{"role": "user", "content": f"Requirement: {requirement}\nApplication Type: {app_type}"}],
                     stream=True
                 )
                 for chunk in elaboration_stream:
@@ -285,23 +295,34 @@ if st.button("Analyze"):
 
             # Generate code with streaming
             with tabs[4]:
-                st.subheader(f"Generated {programming_language} Code")
-                code_placeholder = tabs[4].empty()
-                code_content = []
+                st.subheader("Generated Code")
+                handle_chunk, code_content = stream_content(tabs[4])
                 
-                def handle_code_chunk(chunk):
-                    if isinstance(chunk, dict) and "content" in chunk and chunk["content"]:
-                        code_content.append(chunk["content"])
-                        code_placeholder.code(''.join(filter(None, code_content)), 
-                                           language=programming_language.lower())
+                # Modify the prompt to include app type
+                code_prompt = f"""Based on the specifications, generate code in {programming_language}.
+                Application Type: {app_type}
+                
+                If Web Application:
+                - Include frontend code (HTML/CSS if needed)
+                - Include necessary routing
+                - Include user interface components
+                
+                If Web Service:
+                - Focus on API endpoints
+                - Include request/response handling
+                - Include data models
+                
+                Previous specifications:
+                {final_requirements}
+                """
                 
                 code_stream = client.run(
                     agent=code_generator,
-                    messages=[{"role": "user", "content": test_context}],
+                    messages=[{"role": "user", "content": code_prompt}],
                     stream=True
                 )
                 for chunk in code_stream:
-                    handle_code_chunk(chunk)
+                    handle_chunk(chunk)
                 generated_code = ''.join(filter(None, code_content))
                 st.sidebar.success("✅ Code Generated")
 
