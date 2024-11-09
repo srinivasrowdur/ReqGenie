@@ -1,8 +1,7 @@
 # Environment variables
 .env
 .env.yaml
-
-# Python
+*.pyc
 __pycache__/
 *.py[cod]
 *$py.class
@@ -17,8 +16,6 @@ venv/
 env/
 .env/
 .venv/
-
-
 
 # Operating System
 .DS_Store
