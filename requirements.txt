@@ -1,4 +1,6 @@
-streamlit
+streamlit==1.29.0
 python-dotenv
-git+https://github.com/openai/swarm.git
+pandas
+openpyxl
+git+https://github.com/openai/swarm.git@main
 streamlit-extras

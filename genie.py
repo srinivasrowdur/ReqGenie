@@ -5,7 +5,6 @@ from swarm import Swarm, Agent
 from streamlit_extras.stateful_button import button
 import time
 
-
 # Load environment variables
 load_dotenv()
 
@@ -160,14 +159,30 @@ def create_agents():
     
     return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer
 
+# Set page config
+st.set_page_config(
+    page_title="ReqGenie",
+    page_icon="🧞",
+    layout="wide",
+    menu_items=None
+)
+
+# Hide Streamlit style elements
+hide_st_style = """
+<style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
 # Create UI
 st.title("Requirement Analysis Genie")
 st.write("Enter a requirement and get detailed analysis")
 
-# Add language selector in sidebar
+# Add settings in sidebar
 st.sidebar.title("Settings")
-
-# Add these in the sidebar, probably near where you have the language selector
 with st.sidebar:
     app_type = st.selectbox(
         "Select Application Type",
@@ -200,7 +215,6 @@ def stream_content(tab_placeholder):
             elif isinstance(chunk, str) and chunk:
                 full_response.append(chunk)
             
-            # Only update UI if we have content
             if full_response:
                 message_placeholder.markdown(''.join(filter(None, full_response)) + "▌")
         except Exception as e:
@@ -208,7 +222,7 @@ def stream_content(tab_placeholder):
     
     return handle_chunk, full_response
 
-# Define tab names as a constant
+# Define tab names
 TAB_NAMES = ["Requirements", "Validation", "Final Specs", "Test Cases", "Code", "Review"]
 
 if st.button("Analyze"):
