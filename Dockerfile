@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y git && \
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Copy the application
+# Copy the application (will exclude files in .dockerignore)
 COPY . .
 
 # Set environment variables

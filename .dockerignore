@@ -5,4 +5,6 @@ README.md
 *.pyc
 __pycache__
 .env
-venv/ 
+.env.yaml
+venv/
+.streamlit/secrets.toml
