@@ -1,12 +1,14 @@
-import streamlit as st
 from dotenv import load_dotenv
 import os
+
+# Load environment variables before any other imports
+load_dotenv()
+
+import streamlit as st
 from swarm import Swarm, Agent
 from streamlit_extras.stateful_button import button
 import time
-
-# Load environment variables
-load_dotenv()
+from PyPDF2 import PdfReader
 
 # Initialize Swarm client
 client = Swarm()
@@ -15,13 +17,18 @@ client = Swarm()
 def create_agents():
     elaborator = Agent(
         name="Requirement Elaborator",
-        instructions="""You are a requirement analysis expert. When given a single line requirement and application type:
+        instructions="""You are a requirement analysis expert. When given a requirement, application type, and non-functional requirements:
         1. Expand it into detailed functional requirements, considering:
            - If Web Application: UI/UX, frontend components, user interactions
            - If Web Service: API endpoints, data formats, integration points
-        2. List any assumptions made
-        3. Identify potential edge cases
-        4. Suggest acceptance criteria""",
+        2. Ensure all requirements align with provided NFRs, specifically addressing:
+           - Performance requirements
+           - Security requirements
+           - Scalability requirements
+           - Any other specified NFRs
+        3. List any assumptions made
+        4. Identify potential edge cases
+        5. Suggest acceptance criteria that includes NFR validation""",
     )
     
     validator = Agent(
@@ -30,20 +37,77 @@ def create_agents():
         1. Identify any gaps or inconsistencies
         2. Check if all edge cases are covered
         3. Validate if the acceptance criteria are testable
-        4. Provide specific improvement suggestions""",
+        4. Specifically verify that all NFRs are properly addressed:
+           - Performance metrics are measurable
+           - Security requirements are concrete
+           - Other NFRs have clear validation criteria
+        5. Provide specific improvement suggestions""",
     )
 
     finalizer = Agent(
         name="Requirement Finalizer",
-        instructions="""You are a senior business analyst who finalizes requirements. Given the elaborated requirements and validation feedback:
-        1. Incorporate the validator's feedback
-        2. Refine and consolidate the requirements
-        3. Present a clear, final set of requirements in a structured format
-        4. Include:
-           - Final functional requirements
-           - Refined acceptance criteria
-           - Key assumptions
-           - Addressed edge cases""",
+        instructions="""You are a senior business analyst who creates comprehensive UML-style requirements specifications. 
+        Given the elaborated requirements and validation feedback, create a detailed specification following this structure:
+
+        1. System Overview
+           - Purpose and Scope
+           - System Context
+           - Target Users/Actors
+
+        2. Use Cases (for each major functionality):
+           Use Case: [UC-ID] [Name]
+           Description: [Brief description]
+           Primary Actor: [Main actor]
+           Secondary Actors: [Supporting actors if any]
+           Preconditions: [List all preconditions]
+           Postconditions: [List all postconditions]
+           
+           Main Flow:
+           1. [Step-by-step actions]
+           2. [Include user and system actions]
+           
+           Alternative Flows:
+           A1. [Alternative scenario]
+           A2. [Another alternative]
+           
+           Exception Flows:
+           E1. [Error condition and handling]
+           E2. [Another error scenario]
+           
+           Business Rules: [Related business rules]
+           
+           Non-Functional Requirements:
+           - Performance criteria
+           - Security requirements
+           - Other specific NFRs
+
+           Acceptance Criteria:
+           - [Specific, measurable criteria]
+           - [Including NFR validation]
+
+        3. Data Requirements
+           - Data Entities
+           - Data Validation Rules
+           - Data Privacy Requirements
+
+        4. Interface Requirements
+           - User Interface
+           - API Specifications
+           - External System Interfaces
+
+        5. Technical Constraints
+           - System Requirements
+           - Performance Bounds
+           - Security Controls
+
+        6. Traceability Matrix
+           - Requirements to Use Cases
+           - Requirements to Test Cases
+           - NFR Implementation Mapping
+
+        Format your response using Markdown for better readability.
+        Include diagrams descriptions where applicable (activity, sequence).
+        Ensure all requirements are testable and measurable."""
     )
 
     test_generator = Agent(
@@ -78,9 +142,10 @@ def create_agents():
         Follow this process strictly when generating code:
 
         1. Requirements Analysis:
-           - Review and understand all validated requirements
-           - Identify core functionality and technical constraints
-           - Plan the application architecture based on requirements
+           - Review and understand all validated requirements including NFRs
+           - Implement specific measures to meet performance requirements
+           - Add security controls as specified in NFRs
+           - Include monitoring and metrics collection for NFR validation
 
         2. Test Cases Implementation:
            - Create unit tests based on provided test scenarios
@@ -126,38 +191,61 @@ def create_agents():
 
     code_reviewer = Agent(
         name="Code Reviewer",
-        instructions="""You are a senior software engineer specializing in Python code review. Given the requirements and generated code:
+        instructions="""You are a senior software engineer specializing in Python code review. Given the requirements, NFRs, and generated code:
         1. Review the code for:
-           - Compliance with requirements
+           - Compliance with functional requirements
+           - Adherence to specified NFRs
            - Code quality and best practices
-           - Potential bugs or issues
-           - Security vulnerabilities
-           - Performance considerations
-           - Test coverage
+           - Performance against specified metrics
+           - Security compliance with requirements
+           - Test coverage including NFR validation
         
         2. Provide detailed feedback on:
-           - Missing functionality
-           - Code structure improvements
-           - Security recommendations
-           - Performance optimizations
-           - Error handling improvements
+           - NFR compliance issues
+           - Performance optimization needs
+           - Security implementation gaps
+           - Scalability concerns
+           - Monitoring and metrics coverage
         
         3. Format your response as:
            ## Requirements Compliance
-           - List of met/unmet requirements
+           - List of met/unmet functional requirements
+           - List of met/unmet NFRs
            
-           ## Code Quality Issues
-           - Identified issues with specific line references
+           ## Performance & Scalability
+           - Analysis of performance requirements
+           - Scalability implementation review
            
-           ## Security & Performance
-           - Security concerns
-           - Performance improvement suggestions
+           ## Security Review
+           - Security requirements compliance
+           - Security implementation quality
            
            ## Recommended Changes
            - Specific code changes with examples""",
     )
+
+    nfr_elaborator = Agent(
+        name="NFR Elaborator",
+        instructions="""You are a non-functional requirements specialist. When given NFR specifications:
+        1. Analyze and elaborate each NFR category:
+           - Performance requirements (response times, throughput, etc.)
+           - Security requirements (authentication, encryption, etc.)
+           - Scalability requirements (load handling, concurrent users)
+           - Reliability requirements (uptime, fault tolerance)
+           - Maintainability requirements
+           - Other specified NFRs
+        2. For each NFR:
+           - Define specific, measurable criteria
+           - Specify validation methods
+           - Identify implementation requirements
+           - List monitoring requirements
+        3. Integrate NFRs with functional requirements:
+           - Identify dependencies
+           - Highlight conflicts
+           - Suggest implementation priorities""",
+    )
     
-    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer
+    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, nfr_elaborator
 
 # Set page config
 st.set_page_config(
@@ -194,6 +282,22 @@ with st.sidebar:
         ["Python", "JavaScript", "Java", "C#"],
         key="language"
     )
+    
+    # Add file uploader for NFRs
+    st.sidebar.subheader("Non-Functional Requirements")
+    nfr_file = st.file_uploader("Upload NFR document (optional)", type=['txt', 'md', 'pdf'])
+    
+    # Read NFR file content if uploaded
+    nfr_content = ""
+    if nfr_file is not None:
+        if nfr_file.type == "application/pdf":
+            pdf_reader = PdfReader(nfr_file)
+            nfr_content = ""
+            for page in pdf_reader.pages:
+                nfr_content += page.extract_text()
+        else:
+            nfr_content = nfr_file.getvalue().decode("utf-8")
+        st.sidebar.success("NFR file loaded successfully!")
 
 # Input field with default text
 requirement = st.text_input(
@@ -229,23 +333,44 @@ if st.button("Analyze"):
     if requirement:
         try:
             # Create agents first
-            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer = create_agents()
+            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, nfr_elaborator = create_agents()
             
+            # Include NFRs in the initial context if provided
+            nfr_context = f"\nNon-Functional Requirements:\n{nfr_content}" if nfr_content else ""
+            initial_context = f"Requirement: {requirement}\nApplication Type: {app_type}{nfr_context}"
+
             # Create tabs
             tabs = st.tabs([f"{name}" for name in TAB_NAMES])
             
             # Elaboration
             with tabs[0]:
-                st.subheader("Elaborated Requirements")
+                st.subheader("Requirements Analysis")
                 handle_chunk, elaboration_content = stream_content(tabs[0])
                 elaboration_stream = client.run(
                     agent=elaborator,
-                    messages=[{"role": "user", "content": f"Requirement: {requirement}\nApplication Type: {app_type}"}],
+                    messages=[{"role": "user", "content": initial_context}],
                     stream=True
                 )
                 for chunk in elaboration_stream:
                     handle_chunk(chunk)
                 elaboration = ''.join(filter(None, elaboration_content))
+                
+                # Process NFRs if available
+                nfr_elaboration = ""
+                if nfr_content:
+                    nfr_handle_chunk, nfr_content_processed = stream_content(tabs[0])
+                    nfr_stream = client.run(
+                        agent=nfr_elaborator,
+                        messages=[{"role": "user", "content": nfr_content}],
+                        stream=True
+                    )
+                    for chunk in nfr_stream:
+                        nfr_handle_chunk(chunk)
+                    nfr_elaboration = ''.join(filter(None, nfr_content_processed))
+                    
+                    # Update elaboration to include NFRs
+                    elaboration = f"{elaboration}\n\n{nfr_elaboration}"
+                
                 st.sidebar.success("✅ Requirements Analysis Complete")
 
             # Validation
