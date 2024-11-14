@@ -14,12 +14,14 @@ steps:
       - '-c'
       - |
         API_KEY=$$(gcloud secrets versions access latest --secret="openai-api-key")
+        echo "Retrieved API key, deploying..."
         gcloud run deploy genie \
           --image gcr.io/$PROJECT_ID/genie \
           --region us-central1 \
           --platform managed \
           --allow-unauthenticated \
-          --set-env-vars OPENAI_API_KEY=$$API_KEY
+          --set-env-vars="OPENAI_API_KEY=$$API_KEY" \
+          --set-env-vars="PYTHONUNBUFFERED=1"
 
 options:
   logging: CLOUD_LOGGING_ONLY
