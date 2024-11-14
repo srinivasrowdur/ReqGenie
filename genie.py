@@ -17,18 +17,14 @@ client = Swarm()
 def create_agents():
     elaborator = Agent(
         name="Requirement Elaborator",
-        instructions="""You are a requirement analysis expert. When given a requirement, application type, and non-functional requirements:
+        instructions="""You are a requirement analysis expert. When given a single line requirement and application type:
         1. Expand it into detailed functional requirements, considering:
            - If Web Application: UI/UX, frontend components, user interactions
            - If Web Service: API endpoints, data formats, integration points
-        2. Ensure all requirements align with provided NFRs, specifically addressing:
-           - Performance requirements
-           - Security requirements
-           - Scalability requirements
-           - Any other specified NFRs
+        2. Consider provided Non-Functional Requirements (NFRs)
         3. List any assumptions made
         4. Identify potential edge cases
-        5. Suggest acceptance criteria that includes NFR validation""",
+        5. Suggest acceptance criteria""",
     )
     
     validator = Agent(
@@ -37,77 +33,22 @@ def create_agents():
         1. Identify any gaps or inconsistencies
         2. Check if all edge cases are covered
         3. Validate if the acceptance criteria are testable
-        4. Specifically verify that all NFRs are properly addressed:
-           - Performance metrics are measurable
-           - Security requirements are concrete
-           - Other NFRs have clear validation criteria
+        4. Verify compliance with Non-Functional Requirements (NFRs)
         5. Provide specific improvement suggestions""",
     )
 
     finalizer = Agent(
         name="Requirement Finalizer",
-        instructions="""You are a senior business analyst who creates comprehensive UML-style requirements specifications. 
-        Given the elaborated requirements and validation feedback, create a detailed specification following this structure:
-
-        1. System Overview
-           - Purpose and Scope
-           - System Context
-           - Target Users/Actors
-
-        2. Use Cases (for each major functionality):
-           Use Case: [UC-ID] [Name]
-           Description: [Brief description]
-           Primary Actor: [Main actor]
-           Secondary Actors: [Supporting actors if any]
-           Preconditions: [List all preconditions]
-           Postconditions: [List all postconditions]
-           
-           Main Flow:
-           1. [Step-by-step actions]
-           2. [Include user and system actions]
-           
-           Alternative Flows:
-           A1. [Alternative scenario]
-           A2. [Another alternative]
-           
-           Exception Flows:
-           E1. [Error condition and handling]
-           E2. [Another error scenario]
-           
-           Business Rules: [Related business rules]
-           
-           Non-Functional Requirements:
-           - Performance criteria
-           - Security requirements
-           - Other specific NFRs
-
-           Acceptance Criteria:
-           - [Specific, measurable criteria]
-           - [Including NFR validation]
-
-        3. Data Requirements
-           - Data Entities
-           - Data Validation Rules
-           - Data Privacy Requirements
-
-        4. Interface Requirements
-           - User Interface
-           - API Specifications
-           - External System Interfaces
-
-        5. Technical Constraints
-           - System Requirements
-           - Performance Bounds
-           - Security Controls
-
-        6. Traceability Matrix
-           - Requirements to Use Cases
-           - Requirements to Test Cases
-           - NFR Implementation Mapping
-
-        Format your response using Markdown for better readability.
-        Include diagrams descriptions where applicable (activity, sequence).
-        Ensure all requirements are testable and measurable."""
+        instructions="""You are a senior business analyst who finalizes requirements. Given the elaborated requirements and validation feedback:
+        1. Incorporate the validator's feedback
+        2. Refine and consolidate the requirements
+        3. Present a clear, final set of requirements in a structured format
+        4. Include:
+           - Final functional requirements
+           - Non-Functional Requirements compliance
+           - Refined acceptance criteria
+           - Key assumptions
+           - Addressed edge cases""",
     )
 
     test_generator = Agent(
@@ -118,6 +59,7 @@ def create_agents():
            - Edge cases
            - Error scenarios
            - Security considerations
+           - Non-Functional Requirements validation
         2. For each test case, specify:
            - Test ID
            - Description
@@ -133,119 +75,53 @@ def create_agents():
         goal="Generate production-ready web application code with comprehensive test coverage",
         backstory="""You are a senior full-stack developer specializing in web applications. 
         You have extensive experience in test-driven development (TDD) and writing clean, 
-        maintainable code across Python, Java, and Kotlin. You're known for creating robust 
-        web applications that strictly adhere to requirements while maintaining high test coverage.""",
-        tools=["Web Development", "Test-Driven Development", "API Design", "Database Design"],
-        verbose=True,
-        allow_delegation=False,
+        maintainable code across Python, Java, and Kotlin.""",
         instructions="""
         Follow this process strictly when generating code:
 
         1. Requirements Analysis:
-           - Review and understand all validated requirements including NFRs
-           - Implement specific measures to meet performance requirements
-           - Add security controls as specified in NFRs
-           - Include monitoring and metrics collection for NFR validation
+           - Review and understand all validated requirements
+           - Consider Non-Functional Requirements
+           - Identify core functionality and technical constraints
+           - Plan the application architecture based on requirements
 
         2. Test Cases Implementation:
            - Create unit tests based on provided test scenarios
            - Include test cases for both happy path and edge cases
-           - Use appropriate testing framework for the selected language:
-             * Python: pytest
-             * Java: JUnit
-             * Kotlin: JUnit/KotlinTest
+           - Include NFR validation tests
+           - Use appropriate testing framework for the selected language
 
         3. Web Application Implementation:
            - Create a well-structured web application following MVC/MVVM pattern
            - Implement all required endpoints/routes
            - Include proper input validation and error handling
-           - Add security measures (XSS protection, CSRF tokens, input sanitization)
-           - Implement proper session management if required
-           - Add database integration where needed
-           - Include clear documentation and API endpoints description
-
-        4. Code Organization:
-           - Organize code into logical components/modules
-           - Follow language-specific best practices and conventions
-           - Include necessary dependencies and setup instructions
-           - Provide clear file structure
-           - Add comprehensive comments explaining complex logic
-
-        5. Quality Assurance:
-           - Ensure all test cases are implemented
-           - Verify code meets security best practices
-           - Include error handling for edge cases
-           - Add logging for important operations
-           - Follow SOLID principles
-
-        Output Format:
-        1. First output test cases implementation
-        2. Then output the main application code
-        3. Include setup instructions and dependencies
-        4. Add API documentation if applicable
-        5. Explain any important implementation decisions
-
-        Remember: The code must be complete enough to run and test, with all necessary imports and configurations.
+           - Implement NFR requirements (performance, security, etc.)
+           - Add security measures
+           - Include clear documentation
         """
     )
 
     code_reviewer = Agent(
         name="Code Reviewer",
-        instructions="""You are a senior software engineer specializing in Python code review. Given the requirements, NFRs, and generated code:
+        instructions="""You are a senior software engineer specializing in code review. Given the requirements and generated code:
         1. Review the code for:
            - Compliance with functional requirements
-           - Adherence to specified NFRs
+           - Compliance with Non-Functional Requirements
            - Code quality and best practices
-           - Performance against specified metrics
-           - Security compliance with requirements
-           - Test coverage including NFR validation
+           - Security vulnerabilities
+           - Performance considerations
+           - Test coverage
         
         2. Provide detailed feedback on:
-           - NFR compliance issues
-           - Performance optimization needs
-           - Security implementation gaps
-           - Scalability concerns
-           - Monitoring and metrics coverage
-        
-        3. Format your response as:
-           ## Requirements Compliance
-           - List of met/unmet functional requirements
-           - List of met/unmet NFRs
-           
-           ## Performance & Scalability
-           - Analysis of performance requirements
-           - Scalability implementation review
-           
-           ## Security Review
-           - Security requirements compliance
-           - Security implementation quality
-           
-           ## Recommended Changes
-           - Specific code changes with examples""",
-    )
-
-    nfr_elaborator = Agent(
-        name="NFR Elaborator",
-        instructions="""You are a non-functional requirements specialist. When given NFR specifications:
-        1. Analyze and elaborate each NFR category:
-           - Performance requirements (response times, throughput, etc.)
-           - Security requirements (authentication, encryption, etc.)
-           - Scalability requirements (load handling, concurrent users)
-           - Reliability requirements (uptime, fault tolerance)
-           - Maintainability requirements
-           - Other specified NFRs
-        2. For each NFR:
-           - Define specific, measurable criteria
-           - Specify validation methods
-           - Identify implementation requirements
-           - List monitoring requirements
-        3. Integrate NFRs with functional requirements:
-           - Identify dependencies
-           - Highlight conflicts
-           - Suggest implementation priorities""",
+           - Missing functionality
+           - NFR implementation
+           - Code structure improvements
+           - Security recommendations
+           - Performance optimizations
+        """
     )
     
-    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, nfr_elaborator
+    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer
 
 # Set page config
 st.set_page_config(
@@ -283,21 +159,19 @@ with st.sidebar:
         key="language"
     )
     
-    # Add file uploader for NFRs
-    st.sidebar.subheader("Non-Functional Requirements")
-    nfr_file = st.file_uploader("Upload NFR document (optional)", type=['txt', 'md', 'pdf'])
-    
-    # Read NFR file content if uploaded
+    # Add NFR file upload
+    st.markdown("---")
+    st.subheader("Non-Functional Requirements")
+    nfr_file = st.file_uploader("Upload NFR document", type=['txt', 'md', 'pdf'])
     nfr_content = ""
     if nfr_file is not None:
         if nfr_file.type == "application/pdf":
             pdf_reader = PdfReader(nfr_file)
-            nfr_content = ""
             for page in pdf_reader.pages:
                 nfr_content += page.extract_text()
         else:
-            nfr_content = nfr_file.getvalue().decode("utf-8")
-        st.sidebar.success("NFR file loaded successfully!")
+            nfr_content = nfr_file.getvalue().decode()
+        st.success("NFR document loaded!")
 
 # Input field with default text
 requirement = st.text_input(
@@ -326,120 +200,224 @@ def stream_content(tab_placeholder):
     
     return handle_chunk, full_response
 
-# Define tab names
-TAB_NAMES = ["Requirements", "Validation", "Final Specs", "Test Cases", "Code", "Review"]
+# Define dynamic tab names based on NFR presence
+def get_tab_names(has_nfrs):
+    base_tabs = ["Requirements"]
+    if has_nfrs:
+        base_tabs.append("NFR Analysis")
+    return base_tabs + ["Validation", "Final Specs", "Test Cases", "Code", "Review"]
 
 if st.button("Analyze"):
     if requirement:
         try:
-            # Create agents first
-            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, nfr_elaborator = create_agents()
+            # Create agents
+            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer = create_agents()
             
-            # Include NFRs in the initial context if provided
-            nfr_context = f"\nNon-Functional Requirements:\n{nfr_content}" if nfr_content else ""
-            initial_context = f"Requirement: {requirement}\nApplication Type: {app_type}{nfr_context}"
-
-            # Create tabs
-            tabs = st.tabs([f"{name}" for name in TAB_NAMES])
+            # Determine if we have NFRs and create tabs accordingly
+            has_nfrs = bool(nfr_content.strip())
+            TAB_NAMES = get_tab_names(has_nfrs)
+            tabs = st.tabs([name for name in TAB_NAMES])
             
-            # Elaboration
-            with tabs[0]:
-                st.subheader("Requirements Analysis")
-                handle_chunk, elaboration_content = stream_content(tabs[0])
+            # Track current tab index
+            current_tab = 0
+            
+            # Elaboration of functional requirements
+            with tabs[current_tab]:
+                st.subheader("Elaborated Functional Requirements")
+                handle_chunk, elaboration_content = stream_content(tabs[current_tab])
+                initial_prompt = f"Requirement: {requirement}\nApplication Type: {app_type}"
                 elaboration_stream = client.run(
                     agent=elaborator,
-                    messages=[{"role": "user", "content": initial_context}],
+                    messages=[{"role": "user", "content": initial_prompt}],
                     stream=True
                 )
                 for chunk in elaboration_stream:
                     handle_chunk(chunk)
                 elaboration = ''.join(filter(None, elaboration_content))
-                
-                # Process NFRs if available
-                nfr_elaboration = ""
-                if nfr_content:
-                    nfr_handle_chunk, nfr_content_processed = stream_content(tabs[0])
-                    nfr_stream = client.run(
-                        agent=nfr_elaborator,
-                        messages=[{"role": "user", "content": nfr_content}],
+                st.sidebar.success("✅ Functional Requirements Analysis Complete")
+            current_tab += 1
+
+            # NFR Analysis (only if NFRs are provided)
+            nfr_analysis = ""
+            if has_nfrs:
+                with tabs[current_tab]:
+                    st.subheader("Non-Functional Requirements Analysis")
+                    handle_chunk, nfr_analysis_content = stream_content(tabs[current_tab])
+                    nfr_prompt = f"""Analyze these Non-Functional Requirements for a {app_type}:
+                    
+                    NFRs:
+                    {nfr_content}
+                    
+                    Provide:
+                    1. Detailed analysis of each NFR
+                    2. Implementation considerations
+                    3. Potential challenges
+                    4. Measurement criteria"""
+                    
+                    nfr_analysis_stream = client.run(
+                        agent=elaborator,
+                        messages=[{"role": "user", "content": nfr_prompt}],
                         stream=True
                     )
-                    for chunk in nfr_stream:
-                        nfr_handle_chunk(chunk)
-                    nfr_elaboration = ''.join(filter(None, nfr_content_processed))
-                    
-                    # Update elaboration to include NFRs
-                    elaboration = f"{elaboration}\n\n{nfr_elaboration}"
-                
-                st.sidebar.success("✅ Requirements Analysis Complete")
+                    for chunk in nfr_analysis_stream:
+                        handle_chunk(chunk)
+                    nfr_analysis = ''.join(filter(None, nfr_analysis_content))
+                    st.sidebar.success("✅ NFR Analysis Complete")
+                current_tab += 1
 
             # Validation
-            with tabs[1]:
+            with tabs[current_tab]:
                 st.subheader("Validation Review")
-                handle_chunk, validation_content = stream_content(tabs[1])
+                handle_chunk, validation_content = stream_content(tabs[current_tab])
+                
+                nfr_section = f"\nNon-Functional Requirements Analysis:\n{nfr_analysis}" if has_nfrs else ""
+                validation_prompt = f"""
+                Functional Requirements:
+                {elaboration}
+                {nfr_section}
+                
+                Validate both functional and non-functional requirements, considering:
+                1. Completeness and clarity
+                2. Consistency between functional and non-functional requirements
+                3. Feasibility of implementation
+                4. Testability of all requirements
+                """
+                
                 validation_stream = client.run(
                     agent=validator,
-                    messages=[{"role": "user", "content": elaboration}],
+                    messages=[{"role": "user", "content": validation_prompt}],
                     stream=True
                 )
                 for chunk in validation_stream:
                     handle_chunk(chunk)
                 validation = ''.join(filter(None, validation_content))
                 st.sidebar.success("✅ Validation Complete")
+            current_tab += 1
 
             # Final requirements
-            final_context = f"""
-            Original Requirement:
-            {requirement}
-
-            Elaborated Requirements:
-            {elaboration}
-
-            Validation Feedback:
-            {validation}
-            """
-
-            with tabs[2]:
+            with tabs[current_tab]:
                 st.subheader("Final Requirements")
-                handle_chunk, final_content = stream_content(tabs[2])
+                handle_chunk, final_content = stream_content(tabs[current_tab])
+                
+                nfr_final_section = f"\nNon-Functional Requirements Analysis:\n{nfr_analysis}" if has_nfrs else ""
+                final_prompt = f"""
+                As a senior business analyst, create a comprehensive final requirements document. First provide all sections A through E, then focus on section F with equal detail for ALL use cases identified:
+
+                A. FUNCTIONAL REQUIREMENTS
+                - Core functionality
+                - User interactions
+                - System behaviors
+                - Data handling
+                - Integration points
+
+                B. NON-FUNCTIONAL REQUIREMENTS
+                - Analyze and categorize all provided NFRs
+                - For each NFR category identified in the document:
+                    * Detailed requirements
+                    * Success criteria
+                    * Measurement methods
+                    * Implementation considerations
+                - Cross-cutting concerns across NFRs
+                - Dependencies between NFRs
+
+                C. IMPLEMENTATION CONSIDERATIONS
+                - Technical approach for both functional and non-functional requirements
+                - Integration strategy
+                - Critical success factors
+                - Risk mitigation strategies
+
+                D. ACCEPTANCE CRITERIA
+                - Functional acceptance criteria
+                - NFR-specific acceptance criteria
+                - Validation methods for each requirement type
+                - Testing considerations
+
+                E. ASSUMPTIONS AND CONSTRAINTS
+                - Business context
+                - Technical environment
+                - Dependencies and limitations
+                - Risk factors
+
+                F. UML USE CASES
+                1. First, create a comprehensive use case diagram in PlantUML format showing all use cases.
+
+                2. Then, IMPORTANT: Provide equally detailed documentation for EACH use case identified in the diagram. For EVERY use case, include:
+                   - Use Case Name
+                   - Actors
+                   - Preconditions
+                   - Main Flow
+                   - Alternate Flows
+                   - Exception Flows
+                   - Postconditions
+                   - NFR Considerations
+
+                Note: Ensure that EVERY use case shown in the diagram is fully documented with the above structure. Do not skip or abbreviate any use case documentation.
+
+                Example PlantUML format:
+                ```plantuml
+                @startuml
+                left to right direction
+                actor "User" as user
+                rectangle "System" {{
+                  usecase "Main Function" as UC1
+                  usecase "Secondary Function" as UC2
+                  UC1 <-- user
+                  UC1 <.. UC2 : extends
+                }}
+                @enduml
+                ```
+
+                Format the response in a clear, structured manner. After the UML diagram, provide complete documentation for EACH use case identified.
+                """
+                
                 final_stream = client.run(
                     agent=finalizer,
-                    messages=[{"role": "user", "content": final_context}],
+                    messages=[{"role": "user", "content": final_prompt}],
                     stream=True
                 )
                 for chunk in final_stream:
                     handle_chunk(chunk)
                 final_requirements = ''.join(filter(None, final_content))
                 st.sidebar.success("✅ Final Requirements Complete")
+            current_tab += 1
 
-            # Generate test cases with streaming
-            test_context = f"""
-            Original Requirement: {requirement}
-            Final Requirements: {final_requirements}
-            Programming Language: {programming_language}
-            """
-
-            with tabs[3]:
+            # Test Cases
+            with tabs[current_tab]:
                 st.subheader("Test Cases")
-                handle_chunk, test_content = stream_content(tabs[3])
+                handle_chunk, test_content = stream_content(tabs[current_tab])
+                
+                nfr_test_section = f"\nNon-Functional Requirements:\n{nfr_analysis}" if has_nfrs else ""
+                test_prompt = f"""
+                Original Requirement: {requirement}
+                Final Requirements: {final_requirements}
+                {nfr_test_section}
+                Programming Language: {programming_language}
+                """
+                
                 test_stream = client.run(
                     agent=test_generator,
-                    messages=[{"role": "user", "content": test_context}],
+                    messages=[{"role": "user", "content": test_prompt}],
                     stream=True
                 )
                 for chunk in test_stream:
                     handle_chunk(chunk)
                 test_cases = ''.join(filter(None, test_content))
                 st.sidebar.success("✅ Test Cases Generated")
+            current_tab += 1
 
-            # Generate code with streaming
-            with tabs[4]:
+            # Code Generation
+            with tabs[current_tab]:
                 st.subheader("Generated Code")
-                handle_chunk, code_content = stream_content(tabs[4])
+                handle_chunk, code_content = stream_content(tabs[current_tab])
                 
-                # Modify the prompt to include app type
-                code_prompt = f"""Based on the specifications, generate code in {programming_language}.
+                nfr_code_section = f"\nNon-Functional Requirements:\n{nfr_analysis}" if has_nfrs else ""
+                code_prompt = f"""
+                Based on the specifications, generate code in {programming_language}.
                 Application Type: {app_type}
+                
+                Functional Requirements:
+                {final_requirements}
+                {nfr_code_section}
                 
                 If Web Application:
                 - Include frontend code (HTML/CSS if needed)
@@ -450,9 +428,6 @@ if st.button("Analyze"):
                 - Focus on API endpoints
                 - Include request/response handling
                 - Include data models
-                
-                Previous specifications:
-                {final_requirements}
                 """
                 
                 code_stream = client.run(
@@ -464,20 +439,24 @@ if st.button("Analyze"):
                     handle_chunk(chunk)
                 generated_code = ''.join(filter(None, code_content))
                 st.sidebar.success("✅ Code Generated")
+            current_tab += 1
 
-            # Code review with streaming
-            review_context = f"""
-            Requirements: {final_requirements}
-            Generated Code: {generated_code}
-            Test Cases: {test_cases}
-            """
-
-            with tabs[5]:
+            # Code Review
+            with tabs[current_tab]:
                 st.subheader("Code Review Analysis")
-                handle_chunk, review_content = stream_content(tabs[5])
+                handle_chunk, review_content = stream_content(tabs[current_tab])
+                
+                nfr_review_section = f"\nNon-Functional Requirements:\n{nfr_analysis}" if has_nfrs else ""
+                review_prompt = f"""
+                Requirements: {final_requirements}
+                {nfr_review_section}
+                Generated Code: {generated_code}
+                Test Cases: {test_cases}
+                """
+                
                 review_stream = client.run(
                     agent=code_reviewer,
-                    messages=[{"role": "user", "content": review_context}],
+                    messages=[{"role": "user", "content": review_prompt}],
                     stream=True
                 )
                 for chunk in review_stream:
