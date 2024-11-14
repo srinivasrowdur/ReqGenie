@@ -143,7 +143,8 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # Create UI
 st.title("Requirement Analysis Genie")
-st.write("Enter a requirement and get detailed analysis")
+st.write("This is a demo of orchestrated agents that can analyse requirements, validates them and generate sample code.")
+st.write("Enter a requirement and get detailed analysis - (no need to upload documents!)")
 
 # Add settings in sidebar
 st.sidebar.title("Settings")
