@@ -7,7 +7,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/genie']
   
-  # Get secret and deploy
+  # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -22,13 +22,6 @@ steps:
           --platform managed \
           --allow-unauthenticated \
           --set-env-vars OPENAI_API_KEY="$$API_KEY"
-        
-        # Set IAM policy using beta command
-        gcloud beta run services add-iam-policy-binding genie \
-          --region=us-central1 \
-          --member=allUsers \
-          --role=roles/run.invoker \
-          --platform=managed
 
 options:
   logging: CLOUD_LOGGING_ONLY
