@@ -9,22 +9,16 @@ steps:
   
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
     args:
-      - '-c'
-      - |
-        # Get API key directly
-        export OPENAI_KEY=$$(gcloud secrets versions access latest --secret="openai-api-key" --project=streamlit-441118)
-        
-        # Deploy with environment variable
-        gcloud run deploy genie \
-          --image gcr.io/streamlit-441118/genie \
-          --region us-central1 \
-          --platform managed \
-          --update-env-vars OPENAI_API_KEY=$$OPENAI_KEY
-
-options:
-  logging: CLOUD_LOGGING_ONLY
+      - 'run'
+      - 'deploy'
+      - 'genie'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/genie'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
 
 images:
   - 'gcr.io/$PROJECT_ID/genie' 
