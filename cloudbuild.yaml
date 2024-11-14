@@ -13,14 +13,15 @@ steps:
     args:
       - '-c'
       - |
-        API_KEY=$$(gcloud secrets versions access latest --secret="openai-api-key" --project=streamlit-441118)
+        # Get API key directly
+        export OPENAI_KEY=$$(gcloud secrets versions access latest --secret="openai-api-key" --project=streamlit-441118)
         
-        # Deploy the service
+        # Deploy with environment variable
         gcloud run deploy genie \
           --image gcr.io/streamlit-441118/genie \
           --region us-central1 \
           --platform managed \
-          --set-env-vars OPENAI_API_KEY="$$API_KEY"
+          --update-env-vars OPENAI_API_KEY=$$OPENAI_KEY
 
 options:
   logging: CLOUD_LOGGING_ONLY
