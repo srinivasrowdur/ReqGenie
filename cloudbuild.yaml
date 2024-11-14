@@ -20,6 +20,12 @@ steps:
           --platform managed \
           --allow-unauthenticated \
           --set-env-vars OPENAI_API_KEY="$$API_KEY"
+        
+        # Add IAM policy binding for public access
+        gcloud run services add-iam-policy-binding genie \
+          --region=us-central1 \
+          --member=allUsers \
+          --role=roles/run.invoker
 
 options:
   logging: CLOUD_LOGGING_ONLY
