@@ -14,6 +14,8 @@ steps:
       - '-c'
       - |
         API_KEY=$$(gcloud secrets versions access latest --secret="openai-api-key" --project=$$PROJECT_ID)
+        
+        # Deploy the service
         gcloud run deploy genie \
           --image gcr.io/$$PROJECT_ID/genie \
           --region us-central1 \
@@ -21,11 +23,12 @@ steps:
           --allow-unauthenticated \
           --set-env-vars OPENAI_API_KEY="$$API_KEY"
         
-        # Add IAM policy binding for public access
-        gcloud run services add-iam-policy-binding genie \
+        # Set IAM policy using beta command
+        gcloud beta run services add-iam-policy-binding genie \
           --region=us-central1 \
           --member=allUsers \
-          --role=roles/run.invoker
+          --role=roles/run.invoker \
+          --platform=managed
 
 options:
   logging: CLOUD_LOGGING_ONLY
