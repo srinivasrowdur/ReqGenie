@@ -302,57 +302,84 @@ if st.button("Analyze"):
                 
                 nfr_final_section = f"\nNon-Functional Requirements Analysis:\n{nfr_analysis}" if has_nfrs else ""
                 final_prompt = f"""
-                As a senior business analyst, create a comprehensive final requirements document. First provide all sections A through E, then focus on section F with equal detail for ALL use cases identified:
+                Review and incorporate the following analyses to create the final requirements specification:
 
-                A. FUNCTIONAL REQUIREMENTS
-                - Core functionality
-                - User interactions
-                - System behaviors
-                - Data handling
+                ORIGINAL REQUIREMENT:
+                {requirement}
+
+                ELABORATED REQUIREMENTS:
+                {elaboration}
+
+                VALIDATION FEEDBACK:
+                {validation}
+                {nfr_final_section}
+
+                Based on the above analyses, create a comprehensive final requirements document that builds upon and refines these insights. Organize the document as follows:
+
+                A. EXECUTIVE SUMMARY
+                - Brief overview of the requirement
+                - Key objectives and scope derived from the elaborated requirements
+                - Primary stakeholders identified in the analysis
+
+                B. USE CASES
+                1. First, create a comprehensive use case diagram in PlantUML format showing ALL core and supporting use cases identified in the elaborated requirements.
+
+                2. IMPORTANT: You MUST provide complete detailed documentation for EVERY SINGLE use case shown in the diagram. Do not summarize, abbreviate, or skip any use cases. Do not use phrases like "would be detailed similarly" or "etc."
+
+                For each and every use case, without exception, provide this complete documentation:
+                   - Use Case Name
+                   - Actors (all stakeholders involved)
+                   - Preconditions (complete list)
+                   - Main Flow (detailed step-by-step)
+                   - Alternate Flows (all variations and edge cases from elaboration)
+                   - Exception Flows (all error scenarios based on validation feedback)
+                   - Postconditions (all end states)
+                   - NFR Considerations (specific NFR requirements for this use case)
+                   - Business Rules (any rules or constraints specific to this use case)
+                   - Related Requirements (trace to specific elaborated requirements)
+
+                3. After documenting each use case, provide a traceability matrix showing how each use case maps to:
+                   - Original requirements
+                   - Elaborated requirements
+                   - Validation points
+                   - NFRs (if applicable)
+
+                C. FUNCTIONAL REQUIREMENTS
+                - Map each elaborated requirement to corresponding use cases
+                - Core functionality (from elaborated requirements)
+                - User interactions (from elaborated requirements)
+                - System behaviors (incorporating validation feedback)
+                - Data handling requirements
                 - Integration points
 
-                B. NON-FUNCTIONAL REQUIREMENTS
-                - Analyze and categorize all provided NFRs
-                - For each NFR category identified in the document:
+                D. NON-FUNCTIONAL REQUIREMENTS
+                - Include and categorize all NFRs from the analysis
+                - For each NFR category:
                     * Detailed requirements
                     * Success criteria
                     * Measurement methods
                     * Implementation considerations
-                - Cross-cutting concerns across NFRs
-                - Dependencies between NFRs
+                - Address cross-cutting concerns identified in validation
+                - Document NFR dependencies
 
-                C. IMPLEMENTATION CONSIDERATIONS
-                - Technical approach for both functional and non-functional requirements
+                E. IMPLEMENTATION CONSIDERATIONS
+                - Technical approach addressing validation feedback
                 - Integration strategy
                 - Critical success factors
-                - Risk mitigation strategies
+                - Risk mitigation strategies for identified concerns
 
-                D. ACCEPTANCE CRITERIA
-                - Functional acceptance criteria
-                - NFR-specific acceptance criteria
-                - Validation methods for each requirement type
-                - Testing considerations
+                F. ACCEPTANCE CRITERIA
+                - Map acceptance criteria to specific use cases
+                - Include acceptance criteria from elaborated requirements
+                - Address validation concerns in criteria
+                - Include NFR validation criteria
+                - Testing considerations from validation feedback
 
-                E. ASSUMPTIONS AND CONSTRAINTS
-                - Business context
-                - Technical environment
-                - Dependencies and limitations
-                - Risk factors
-
-                F. UML USE CASES
-                1. First, create a comprehensive use case diagram in PlantUML format showing all use cases.
-
-                2. Then, IMPORTANT: Provide equally detailed documentation for EACH use case identified in the diagram. For EVERY use case, include:
-                   - Use Case Name
-                   - Actors
-                   - Preconditions
-                   - Main Flow
-                   - Alternate Flows
-                   - Exception Flows
-                   - Postconditions
-                   - NFR Considerations
-
-                Note: Ensure that EVERY use case shown in the diagram is fully documented with the above structure. Do not skip or abbreviate any use case documentation.
+                G. ASSUMPTIONS AND CONSTRAINTS
+                - Document assumptions from elaborated requirements
+                - Include constraints identified in validation
+                - Technical environment considerations
+                - Risk factors highlighted in validation
 
                 Example PlantUML format:
                 ```plantuml
@@ -368,7 +395,19 @@ if st.button("Analyze"):
                 @enduml
                 ```
 
-                Format the response in a clear, structured manner. After the UML diagram, provide complete documentation for EACH use case identified.
+                Ensure that:
+                1. All sections maintain consistency with the elaborated requirements
+                2. Validation feedback is properly addressed and incorporated
+                3. Each use case traces back to specific elaborated requirements
+                4. All identified edge cases and concerns are covered
+                5. The final document builds upon rather than replaces the previous analyses
+
+                Additional Instructions:
+                1. Do not use placeholder text or references to similar patterns
+                2. Every use case shown in the PlantUML diagram must have its own complete documentation section
+                3. Do not abbreviate or combine similar use cases
+                4. Ensure each use case has unique, specific details derived from the requirements
+                5. The use case documentation must be exhaustive and implementation-ready
                 """
                 
                 final_stream = client.run(
