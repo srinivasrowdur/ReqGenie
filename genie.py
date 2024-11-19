@@ -108,6 +108,12 @@ with st.sidebar:
         else:
             nfr_content = nfr_file.getvalue().decode()
         st.success("NFR document loaded!")
+    
+    # Add Jira integration toggle
+    st.markdown("---")
+    update_jira = st.toggle('Update Jira', value=False, help='Toggle to enable/disable Jira updates')
+    if update_jira:
+        st.info("Jira updates will be created for the requirements")
 
 # Input field with default text
 requirement = st.text_input(
