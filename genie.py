@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 import os
+import json
+from jira_service import JiraService
 
 # Load environment variables before any other imports
 load_dotenv()
@@ -16,7 +18,8 @@ from agent_instructions import (
     TEST_GENERATOR_INSTRUCTIONS,
     CODE_GENERATOR_INSTRUCTIONS,
     CODE_REVIEWER_INSTRUCTIONS,
-    NFR_ANALYSIS_PROMPT_TEMPLATE
+    NFR_ANALYSIS_PROMPT_TEMPLATE,
+    JIRA_AGENT_INSTRUCTIONS
 )
 
 # Initialize Swarm client
@@ -55,8 +58,13 @@ def create_agents():
         name="Code Reviewer",
         instructions=CODE_REVIEWER_INSTRUCTIONS,
     )
+
+    jira_creator = Agent(
+        name="Jira Ticket Creator",
+        instructions=JIRA_AGENT_INSTRUCTIONS,
+    )
     
-    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer
+    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator
 
 # Set page config
 st.set_page_config(
@@ -114,6 +122,14 @@ with st.sidebar:
     update_jira = st.toggle('Update Jira', value=False, help='Toggle to enable/disable Jira updates')
     if update_jira:
         st.info("Jira updates will be created for the requirements")
+        jira_project = st.text_input(
+            "Jira Project Key",
+            help="Enter the project key where tickets should be created"
+        )
+        jira_component = st.text_input(
+            "Component Name",
+            help="Enter the component name for the tickets"
+        )
 
 # Input field with default text
 requirement = st.text_input(
@@ -153,7 +169,7 @@ if st.button("Analyze"):
     if requirement:
         try:
             # Create agents
-            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer = create_agents()
+            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator = create_agents()
             
             # Determine if we have NFRs and create tabs accordingly
             has_nfrs = bool(nfr_content.strip())
@@ -468,6 +484,100 @@ if st.button("Analyze"):
                 for chunk in review_stream:
                     handle_chunk(chunk)
                 st.sidebar.success("✅ Code Review Complete")
+
+            # Create Jira tickets if enabled
+            if update_jira and jira_project:
+                with st.spinner("Creating Jira tickets..."):
+                    jira_prompt = f"""
+                    Create Jira tickets for the following analysis:
+                    
+                    Original Requirement:
+                    {requirement}
+                    
+                    Elaborated Requirements:
+                    {elaboration}
+                    
+                    Final Requirements:
+                    {final_requirements}
+                    
+                    Test Cases:
+                    {test_cases}
+                    
+                    NFR Analysis:
+                    {nfr_analysis if has_nfrs else "No NFRs provided"}
+                    
+                    Project Configuration:
+                    - Project Key: {jira_project}
+                    - Component: {jira_component}
+                    
+                    Create a complete ticket hierarchy including epic, stories, tasks, and test cases.
+                    Ensure all tickets are properly linked and include relevant details from the analysis.
+                    """
+                    
+                    jira_stream = client.run(
+                        agent=jira_creator,
+                        messages=[{"role": "user", "content": jira_prompt}],
+                        stream=True
+                    )
+                    
+                    jira_service = JiraService()
+                    
+                    # Create a new section for Jira tickets
+                    st.subheader("Jira Tickets Created")
+                    handle_chunk, jira_content = stream_content(st)
+                    
+                    try:
+                        for chunk in jira_stream:
+                            handle_chunk(chunk)
+                        
+                        # Parse the JSON response from the agent
+                        jira_tickets = json.loads(''.join(filter(None, jira_content)))
+                        
+                        # Create tickets in Jira
+                        with st.spinner("Creating tickets in Jira..."):
+                            # Create epic
+                            epic_key = jira_service.create_epic(
+                                jira_project,
+                                jira_tickets["epic"]["summary"],
+                                jira_tickets["epic"]["description"]
+                            )
+                            
+                            # Create stories
+                            for story in jira_tickets["stories"]:
+                                story_key = jira_service.create_story(
+                                    jira_project,
+                                    story["summary"],
+                                    story["description"],
+                                    epic_key,
+                                    story["story_points"]
+                                )
+                                
+                                # Create tasks for this story
+                                for task in jira_tickets["tasks"]:
+                                    if task.get("parent_key") == story["epic_link"]:
+                                        jira_service.create_task(
+                                            jira_project,
+                                            task["summary"],
+                                            task["description"],
+                                            story_key
+                                        )
+                                
+                                # Create test cases for this story
+                                for test in jira_tickets["tests"]:
+                                    if test.get("parent_key") == story["epic_link"]:
+                                        jira_service.create_task(
+                                            jira_project,
+                                            test["summary"],
+                                            test["description"],
+                                            story_key
+                                        )
+                            
+                            st.success(f"Successfully created Jira tickets under Epic: {epic_key}")
+                            
+                    except Exception as e:
+                        st.error(f"Error creating Jira tickets: {str(e)}")
+                    
+                    st.sidebar.success("✅ Jira Tickets Created")
 
             # Show completion message
             st.sidebar.success("✨ Analysis Complete!")
