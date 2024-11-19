@@ -244,16 +244,36 @@ if st.button("Analyze"):
                 with tabs[current_tab]:
                     st.subheader("Non-Functional Requirements Analysis")
                     handle_chunk, nfr_analysis_content = stream_content(tabs[current_tab])
-                    nfr_prompt = f"""Analyze these Non-Functional Requirements for a {app_type}:
-                    
-                    NFRs:
+                    nfr_prompt = f"""Original NFR Document Content:
                     {nfr_content}
                     
-                    Provide:
-                    1. Detailed analysis of each NFR
-                    2. Implementation considerations
-                    3. Potential challenges
-                    4. Measurement criteria"""
+                    Analyze these Non-Functional Requirements for a {app_type}. 
+                    Structure your analysis as follows:
+
+                    1. NFR CATEGORIES IDENTIFICATION
+                    First, clearly identify and list all NFR categories present in the document (e.g., Performance, Security, Scalability, etc.)
+
+                    2. DETAILED CATEGORY ANALYSIS
+                    For each identified category, provide:
+                       a) Category Name
+                       b) Description
+                       c) Specific Requirements List
+                       d) Quantifiable Metrics
+                       e) Implementation Guidelines
+                       f) Validation Criteria
+                       g) Dependencies with other NFRs
+                    
+                    3. CROSS-CUTTING CONCERNS
+                       - How different NFR categories interact
+                       - Potential conflicts between categories
+                       - Priority order of NFR categories
+                    
+                    4. IMPLEMENTATION IMPACT
+                       - Impact on system architecture
+                       - Impact on development process
+                       - Resource requirements per category
+                    
+                    Format the response in a clear, categorical structure that can be easily referenced in subsequent analyses."""
                     
                     nfr_analysis_stream = client.run(
                         agent=elaborator,
@@ -300,9 +320,21 @@ if st.button("Analyze"):
                 st.subheader("Final Requirements")
                 handle_chunk, final_content = stream_content(tabs[current_tab])
                 
-                nfr_final_section = f"\nNon-Functional Requirements Analysis:\n{nfr_analysis}" if has_nfrs else ""
+                # Modified NFR section for final requirements
+                nfr_section = ""
+                if has_nfrs:
+                    nfr_section = f"""
+                    ORIGINAL NFR DOCUMENT:
+                    {nfr_content}
+
+                    DETAILED NFR ANALYSIS:
+                    {nfr_analysis}
+
+                    IMPORTANT: Each NFR category identified in the analysis must be explicitly addressed in all relevant sections below.
+                    """
+                
                 final_prompt = f"""
-                Review and incorporate the following analyses to create the final requirements specification:
+                Review and incorporate ALL of the following inputs to create the final requirements specification:
 
                 ORIGINAL REQUIREMENT:
                 {requirement}
@@ -312,37 +344,52 @@ if st.button("Analyze"):
 
                 VALIDATION FEEDBACK:
                 {validation}
-                {nfr_final_section}
 
-                Based on the above analyses, create a comprehensive final requirements document that builds upon and refines these insights. Organize the document as follows:
+                {nfr_section}
+
+                Based on ALL the above analyses, create a comprehensive final requirements document that incorporates and refines these insights. Organize the document as follows:
 
                 A. EXECUTIVE SUMMARY
                 - Brief overview of the requirement
                 - Key objectives and scope derived from the elaborated requirements
                 - Primary stakeholders identified in the analysis
+                - Summary of key NFRs and their impact
 
                 B. USE CASES
-                1. First, create a comprehensive use case diagram in PlantUML format showing ALL core and supporting use cases identified in the elaborated requirements.
+                1. First create a comprehensive use case diagram in PlantUML format.
 
-                2. IMPORTANT: You MUST provide complete detailed documentation for EVERY SINGLE use case shown in the diagram. Do not summarize, abbreviate, or skip any use cases. Do not use phrases like "would be detailed similarly" or "etc."
+                2. CRITICAL: For EACH use case in the diagram, provide exhaustive documentation including NFR considerations for EVERY identified NFR category:
 
-                For each and every use case, without exception, provide this complete documentation:
-                   - Use Case Name
-                   - Actors (all stakeholders involved)
-                   - Preconditions (complete list)
-                   - Main Flow (detailed step-by-step)
-                   - Alternate Flows (all variations and edge cases from elaboration)
-                   - Exception Flows (all error scenarios based on validation feedback)
-                   - Postconditions (all end states)
-                   - NFR Considerations (specific NFR requirements for this use case)
-                   - Business Rules (any rules or constraints specific to this use case)
-                   - Related Requirements (trace to specific elaborated requirements)
-
-                3. After documenting each use case, provide a traceability matrix showing how each use case maps to:
-                   - Original requirements
-                   - Elaborated requirements
-                   - Validation points
-                   - NFRs (if applicable)
+                   Use Case Documentation Template:
+                   a) Basic Information:
+                      - Use Case Name
+                      - Actors
+                      - Description
+                   
+                   b) Flow Details:
+                      - Preconditions
+                      - Main Flow (step-by-step)
+                      - Alternate Flows
+                      - Exception Flows
+                      - Postconditions
+                   
+                   c) NFR Category Implementation (MUST cover EACH identified NFR category):
+                      For each NFR category identified in the analysis:
+                      - Specific Requirements for this category in this use case
+                      - Implementation Guidelines
+                      - Success Criteria
+                      - Validation Method
+                      - Impact on Use Case Flow
+                   
+                   d) Business Rules & Constraints:
+                      - Functional Rules
+                      - NFR-specific Rules per Category
+                      - Technical Constraints
+                   
+                   e) Traceability:
+                      - Related Functional Requirements
+                      - Related NFR Categories
+                      - Validation Points
 
                 C. FUNCTIONAL REQUIREMENTS
                 - Map each elaborated requirement to corresponding use cases
@@ -351,63 +398,67 @@ if st.button("Analyze"):
                 - System behaviors (incorporating validation feedback)
                 - Data handling requirements
                 - Integration points
+                - Impact of each NFR category on functional requirements
+                - NFR category-specific constraints on functionality
+                - Cross-cutting concerns per NFR category
 
                 D. NON-FUNCTIONAL REQUIREMENTS
-                - Include and categorize all NFRs from the analysis
-                - For each NFR category:
-                    * Detailed requirements
-                    * Success criteria
-                    * Measurement methods
-                    * Implementation considerations
-                - Address cross-cutting concerns identified in validation
-                - Document NFR dependencies
+                MUST provide separate detailed sections for EACH identified NFR category:
+
+                For each NFR Category:
+                1. Category-Specific Requirements
+                   - Detailed specifications
+                   - Quantifiable metrics
+                   - Implementation guidelines
+                   - Validation criteria
+
+                2. Use Case Impact Matrix
+                   - How this NFR category affects each use case
+                   - Specific requirements per use case
+                   - Implementation priorities
+                   - Success criteria
+
+                3. Integration Considerations
+                   - Impact on other NFR categories
+                   - Technical constraints
+                   - Implementation dependencies
+                   - Risk factors
 
                 E. IMPLEMENTATION CONSIDERATIONS
-                - Technical approach addressing validation feedback
-                - Integration strategy
+                - Technical approach addressing both functional and NFR requirements
+                - Integration strategy considering NFR constraints
                 - Critical success factors
                 - Risk mitigation strategies for identified concerns
+                - NFR implementation priorities and dependencies
 
                 F. ACCEPTANCE CRITERIA
-                - Map acceptance criteria to specific use cases
-                - Include acceptance criteria from elaborated requirements
-                - Address validation concerns in criteria
-                - Include NFR validation criteria
-                - Testing considerations from validation feedback
+                - Detailed criteria for each use case
+                - NFR-specific acceptance criteria
+                - Testing and validation requirements
+                - Performance benchmarks
+                - Security requirements
+                - Other NFR validation criteria
 
                 G. ASSUMPTIONS AND CONSTRAINTS
-                - Document assumptions from elaborated requirements
-                - Include constraints identified in validation
-                - Technical environment considerations
-                - Risk factors highlighted in validation
-
-                Example PlantUML format:
-                ```plantuml
-                @startuml
-                left to right direction
-                actor "User" as user
-                rectangle "System" {{
-                  usecase "Main Function" as UC1
-                  usecase "Secondary Function" as UC2
-                  UC1 <-- user
-                  UC1 <.. UC2 : extends
-                }}
-                @enduml
-                ```
+                - Document all assumptions
+                - Technical constraints
+                - NFR-related constraints
+                - Dependencies
+                - Risk factors
 
                 Ensure that:
-                1. All sections maintain consistency with the elaborated requirements
-                2. Validation feedback is properly addressed and incorporated
-                3. Each use case traces back to specific elaborated requirements
-                4. All identified edge cases and concerns are covered
-                5. The final document builds upon rather than replaces the previous analyses
+                1. Every use case is fully detailed with no summarization
+                2. All NFRs are explicitly addressed in relevant use cases
+                3. NFR requirements are integrated throughout all sections
+                4. Clear traceability exists between requirements, NFRs, and use cases
+                5. No content from the NFR analysis is lost or summarized
 
-                Additional Instructions:
-                1. Do not use placeholder text or references to similar patterns
-                2. Every use case shown in the PlantUML diagram must have its own complete documentation section
-                3. Do not abbreviate or combine similar use cases
-                4. Ensure each use case has unique, specific details derived from the requirements
-                5. The use case documentation must be exhaustive and implementation-ready
+                CRITICAL REQUIREMENTS:
+                1. Every NFR category must be explicitly addressed in each use case
+                2. Each use case must detail how it implements every NFR category
+                3. Provide clear traceability between NFR categories and use cases
+                4. Include category-specific metrics and validation criteria
+                5. Document category interactions and dependencies
                 """
                 
                 final_stream = client.run(
