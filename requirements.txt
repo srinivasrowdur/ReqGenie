@@ -5,3 +5,6 @@ openpyxl
 git+https://github.com/openai/swarm.git@main
 streamlit-extras
 PyPDF2==3.0.1
+openai
+requests
+typing
