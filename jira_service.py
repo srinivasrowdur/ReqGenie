@@ -92,9 +92,6 @@ class JiraService:
         try:
             url = f"{self.base_url}/rest/api/3/issue"
             
-            # Debug output
-            print("Creating issue with payload:", json.dumps(payload, indent=2))
-            
             response = requests.post(
                 url,
                 data=json.dumps(payload),
@@ -102,13 +99,9 @@ class JiraService:
                 auth=self.auth
             )
             
-            if not response.ok:
-                print("Error response:", response.text)
-                
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Full error response: {e.response.text if hasattr(e, 'response') else str(e)}")
             error_msg = str(e)
             if hasattr(e, 'response'):
                 if e.response.status_code == 401:

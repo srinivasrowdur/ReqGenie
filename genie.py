@@ -126,10 +126,12 @@ with st.sidebar:
         # Add Jira configuration fields
         jira_project = st.text_input(
             "Jira Project Key",
+            value="SCRUM",
             help="Enter the project key where tickets should be created (e.g., PROJ)"
         )
         jira_component = st.text_input(
             "Component Name",
+            value="frontend",
             help="Enter the component name for the tickets (optional)"
         )
         
