@@ -117,19 +117,35 @@ with st.sidebar:
             nfr_content = nfr_file.getvalue().decode()
         st.success("NFR document loaded!")
     
-    # Add Jira integration toggle
+    # Add Jira integration toggle and settings
     st.markdown("---")
     update_jira = st.toggle('Update Jira', value=False, help='Toggle to enable/disable Jira updates')
     if update_jira:
         st.info("Jira updates will be created for the requirements")
+        
+        # Add Jira configuration fields
         jira_project = st.text_input(
             "Jira Project Key",
-            help="Enter the project key where tickets should be created"
+            help="Enter the project key where tickets should be created (e.g., PROJ)"
         )
         jira_component = st.text_input(
             "Component Name",
-            help="Enter the component name for the tickets"
+            help="Enter the component name for the tickets (optional)"
         )
+        
+        # Test Jira connection when configuration is provided
+        if jira_project:
+            try:
+                jira_service = JiraService()
+                if jira_service.test_connection():
+                    if jira_service.validate_project(jira_project):
+                        st.success("✅ Jira connection successful!")
+            except ValueError as e:
+                st.error(f"Configuration Error: {str(e)}")
+            except ConnectionError as e:
+                st.error(f"Connection Error: {str(e)}")
+            except Exception as e:
+                st.error(f"Jira Error: {str(e)}")
 
 # Input field with default text
 requirement = st.text_input(
@@ -258,10 +274,8 @@ if st.button("Analyze"):
                     ORIGINAL NFR DOCUMENT:
                     {nfr_content}
 
-                    DETAILED NFR ANALYSIS:
+                    NFR ANALYSIS:
                     {nfr_analysis}
-
-                    IMPORTANT: Each NFR category identified in the analysis must be explicitly addressed in all relevant sections below.
                     """
                 
                 final_prompt = f"""
@@ -287,40 +301,20 @@ if st.button("Analyze"):
                 - Summary of key NFRs and their impact
 
                 B. USE CASES
-                1. First create a comprehensive use case diagram in PlantUML format.
+                1. Create a comprehensive use case diagram in PlantUML format showing all core and supporting use cases identified in the elaborated requirements.
 
-                2. CRITICAL: For EACH use case in the diagram, provide exhaustive documentation including NFR considerations for EVERY identified NFR category:
-
-                   Use Case Documentation Template:
-                   a) Basic Information:
-                      - Use Case Name
-                      - Actors
-                      - Description
-                   
-                   b) Flow Details:
-                      - Preconditions
-                      - Main Flow (step-by-step)
-                      - Alternate Flows
-                      - Exception Flows
-                      - Postconditions
-                   
-                   c) NFR Category Implementation (MUST cover EACH identified NFR category):
-                      For each NFR category identified in the analysis:
-                      - Specific Requirements for this category in this use case
-                      - Implementation Guidelines
-                      - Success Criteria
-                      - Validation Method
-                      - Impact on Use Case Flow
-                   
-                   d) Business Rules & Constraints:
-                      - Functional Rules
-                      - NFR-specific Rules per Category
-                      - Technical Constraints
-                   
-                   e) Traceability:
-                      - Related Functional Requirements
-                      - Related NFR Categories
-                      - Validation Points
+                2. IMPORTANT: You MUST provide complete detailed documentation for EVERY SINGLE use case shown in the diagram. For each and every use case, without exception, provide this complete documentation:
+                   - Use Case Name
+                   - Actors (all stakeholders involved)
+                   - Preconditions (complete list)
+                   - Main Flow (detailed step-by-step)
+                   - Alternate Flows (all variations and edge cases from elaboration)
+                   - Exception Flows (all error scenarios based on validation feedback)
+                   - Postconditions (all end states)
+                   - NFR Considerations (specific NFR requirements for this use case, referencing the NFR analysis)
+                   - Business Rules (any rules or constraints specific to this use case)
+                   - Related Requirements (trace to specific elaborated requirements)
+                   - NFR Compliance Requirements (detailed NFR requirements specific to this use case)
 
                 C. FUNCTIONAL REQUIREMENTS
                 - Map each elaborated requirement to corresponding use cases
@@ -329,31 +323,28 @@ if st.button("Analyze"):
                 - System behaviors (incorporating validation feedback)
                 - Data handling requirements
                 - Integration points
-                - Impact of each NFR category on functional requirements
-                - NFR category-specific constraints on functionality
-                - Cross-cutting concerns per NFR category
 
                 D. NON-FUNCTIONAL REQUIREMENTS
-                MUST provide separate detailed sections for EACH identified NFR category:
-
-                For each NFR Category:
-                1. Category-Specific Requirements
-                   - Detailed specifications
-                   - Quantifiable metrics
+                For each NFR identified in the analysis:
+                1. Detailed Specification
+                   - Category and description
+                   - Specific requirements
+                   - Measurement criteria
                    - Implementation guidelines
-                   - Validation criteria
+                   - Impact on functional requirements
+                   - Validation methods
 
-                2. Use Case Impact Matrix
-                   - How this NFR category affects each use case
-                   - Specific requirements per use case
+                2. Cross-cutting Concerns
+                   - Dependencies between NFRs
+                   - Impact on architecture
                    - Implementation priorities
-                   - Success criteria
-
-                3. Integration Considerations
-                   - Impact on other NFR categories
-                   - Technical constraints
-                   - Implementation dependencies
                    - Risk factors
+
+                3. Compliance Matrix
+                   - Map each NFR to affected use cases
+                   - Success criteria for each NFR
+                   - Verification methods
+                   - Testing requirements
 
                 E. IMPLEMENTATION CONSIDERATIONS
                 - Technical approach addressing both functional and NFR requirements
@@ -383,13 +374,6 @@ if st.button("Analyze"):
                 3. NFR requirements are integrated throughout all sections
                 4. Clear traceability exists between requirements, NFRs, and use cases
                 5. No content from the NFR analysis is lost or summarized
-
-                CRITICAL REQUIREMENTS:
-                1. Every NFR category must be explicitly addressed in each use case
-                2. Each use case must detail how it implements every NFR category
-                3. Provide clear traceability between NFR categories and use cases
-                4. Include category-specific metrics and validation criteria
-                5. Document category interactions and dependencies
                 """
                 
                 final_stream = client.run(
@@ -488,96 +472,147 @@ if st.button("Analyze"):
             # Create Jira tickets if enabled
             if update_jira and jira_project:
                 with st.spinner("Creating Jira tickets..."):
-                    jira_prompt = f"""
-                    Create Jira tickets for the following analysis:
-                    
-                    Original Requirement:
-                    {requirement}
-                    
-                    Elaborated Requirements:
-                    {elaboration}
-                    
-                    Final Requirements:
-                    {final_requirements}
-                    
-                    Test Cases:
-                    {test_cases}
-                    
-                    NFR Analysis:
-                    {nfr_analysis if has_nfrs else "No NFRs provided"}
-                    
-                    Project Configuration:
-                    - Project Key: {jira_project}
-                    - Component: {jira_component}
-                    
-                    Create a complete ticket hierarchy including epic, stories, tasks, and test cases.
-                    Ensure all tickets are properly linked and include relevant details from the analysis.
-                    """
-                    
-                    jira_stream = client.run(
-                        agent=jira_creator,
-                        messages=[{"role": "user", "content": jira_prompt}],
-                        stream=True
-                    )
-                    
-                    jira_service = JiraService()
-                    
-                    # Create a new section for Jira tickets
-                    st.subheader("Jira Tickets Created")
-                    handle_chunk, jira_content = stream_content(st)
-                    
                     try:
+                        # Validate Jira configuration first
+                        jira_service = JiraService()
+                        jira_service.test_connection()
+                        jira_service.validate_project(jira_project)
+                        
+                        # Create a new section for Jira tickets
+                        st.subheader("Jira Tickets Created")
+                        handle_chunk, jira_content = stream_content(st)
+                        
+                        jira_prompt = f"""IMPORTANT: Respond ONLY with valid JSON. Do not include any other text.
+
+                        Create Jira tickets for the following requirements:
+                        
+                        Original Requirement: {requirement}
+                        
+                        Elaborated Requirements: {elaboration}
+                        
+                        Final Requirements: {final_requirements}
+                        
+                        Test Cases: {test_cases}
+                        
+                        NFR Analysis: {nfr_analysis if has_nfrs else "No NFRs provided"}
+                        
+                        Project Key: {jira_project}
+                        Component: {jira_component}
+
+                        Remember:
+                        1. Response must be ONLY valid JSON
+                        2. Follow the exact structure provided
+                        3. No text before or after the JSON
+                        4. All JSON strings must be properly escaped
+                        """
+                        
+                        # Run the Jira agent to get the stream
+                        jira_stream = client.run(
+                            agent=jira_creator,
+                            messages=[{"role": "user", "content": jira_prompt}],
+                            stream=True
+                        )
+                        
+                        # Collect all chunks
+                        full_response = []
                         for chunk in jira_stream:
                             handle_chunk(chunk)
+                            if isinstance(chunk, dict) and "content" in chunk:
+                                full_response.append(chunk["content"])
+                            elif isinstance(chunk, str):
+                                full_response.append(chunk)
                         
-                        # Parse the JSON response from the agent
-                        jira_tickets = json.loads(''.join(filter(None, jira_content)))
+                        # Join and clean the response
+                        json_str = ''.join(filter(None, full_response))
                         
-                        # Create tickets in Jira
-                        with st.spinner("Creating tickets in Jira..."):
-                            # Create epic
-                            epic_key = jira_service.create_epic(
-                                jira_project,
-                                jira_tickets["epic"]["summary"],
-                                jira_tickets["epic"]["description"]
-                            )
+                        # Try to find JSON in the response
+                        try:
+                            # Remove any text before the first {
+                            json_start = json_str.find('{')
+                            if json_start != -1:
+                                json_str = json_str[json_start:]
                             
-                            # Create stories
-                            for story in jira_tickets["stories"]:
-                                story_key = jira_service.create_story(
+                            # Remove any text after the last }
+                            json_end = json_str.rfind('}')
+                            if json_end != -1:
+                                json_str = json_str[:json_end + 1]
+                            
+                            # Debug output
+                            st.text("Attempting to parse JSON:")
+                            st.code(json_str, language='json')
+                            
+                            # Parse JSON
+                            jira_tickets = json.loads(json_str)
+                            
+                            # Validate JSON structure
+                            required_keys = ["epic", "stories", "tasks", "tests"]
+                            missing_keys = [key for key in required_keys if key not in jira_tickets]
+                            if missing_keys:
+                                raise ValueError(f"Missing required keys in JSON: {missing_keys}")
+                            
+                            # Create tickets in Jira
+                            with st.spinner("Creating tickets in Jira..."):
+                                # Create epic
+                                epic_key = jira_service.create_epic(
                                     jira_project,
-                                    story["summary"],
-                                    story["description"],
-                                    epic_key,
-                                    story["story_points"]
+                                    jira_tickets["epic"]["summary"],
+                                    jira_tickets["epic"]["description"]
                                 )
+                                st.success(f"Created Epic: {epic_key}")
                                 
-                                # Create tasks for this story
-                                for task in jira_tickets["tasks"]:
-                                    if task.get("parent_key") == story["epic_link"]:
-                                        jira_service.create_task(
+                                # Create stories
+                                for story in jira_tickets["stories"]:
+                                    story_key = jira_service.create_story(
+                                        jira_project,
+                                        story["summary"],
+                                        story["description"],
+                                        epic_key,
+                                        story.get("story_points")
+                                    )
+                                    st.success(f"Created Story: {story_key}")
+                                    
+                                    # Create tasks for this story
+                                    for task in jira_tickets["tasks"]:
+                                        task_key = jira_service.create_task(
                                             jira_project,
                                             task["summary"],
                                             task["description"],
                                             story_key
                                         )
-                                
-                                # Create test cases for this story
-                                for test in jira_tickets["tests"]:
-                                    if test.get("parent_key") == story["epic_link"]:
-                                        jira_service.create_task(
+                                        st.success(f"Created Task: {task_key}")
+                                    
+                                    # Create test cases for this story
+                                    for test in jira_tickets["tests"]:
+                                        test_key = jira_service.create_task(
                                             jira_project,
                                             test["summary"],
                                             test["description"],
                                             story_key
                                         )
+                                        st.success(f"Created Test: {test_key}")
+                                
+                                st.success(f"Successfully created all Jira tickets under Epic: {epic_key}")
+                                
+                        except json.JSONDecodeError as e:
+                            st.error(f"Invalid JSON format: {str(e)}")
+                            st.error("Raw response received:")
+                            st.code(json_str)
+                            raise Exception("Invalid JSON response from Jira agent")
+                        except ValueError as e:
+                            st.error(f"Invalid JSON structure: {str(e)}")
+                            st.error("JSON received:")
+                            st.code(json_str)
+                            raise Exception(f"Invalid JSON structure: {str(e)}")
                             
-                            st.success(f"Successfully created Jira tickets under Epic: {epic_key}")
-                            
+                    except ValueError as e:
+                        st.error(f"Jira Configuration Error: {str(e)}")
+                        st.error("Please check your Jira settings in the .env file")
+                    except ConnectionError as e:
+                        st.error(f"Jira Connection Error: {str(e)}")
+                        st.error("Please verify your Jira URL and credentials")
                     except Exception as e:
                         st.error(f"Error creating Jira tickets: {str(e)}")
-                    
-                    st.sidebar.success("✅ Jira Tickets Created")
+                        st.error("Please check the error message and try again")
 
             # Show completion message
             st.sidebar.success("✨ Analysis Complete!")
