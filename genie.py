@@ -2,6 +2,13 @@ from dotenv import load_dotenv
 import os
 import json
 from jira_service import JiraService
+from agents.elaborator_agent import ElaboratorAgent
+from agents.validator_agent import ValidatorAgent
+from agents.finalizer_agent import FinalizerAgent
+from agents.test_generator_agent import TestGeneratorAgent
+from agents.code_generator_agent import CodeGeneratorAgent
+from agents.code_reviewer_agent import CodeReviewerAgent
+from agents.jira_agent import JiraAgent
 
 # Load environment variables before any other imports
 load_dotenv()
@@ -11,58 +18,19 @@ from swarm import Swarm, Agent
 from streamlit_extras.stateful_button import button
 import time
 from PyPDF2 import PdfReader
-from agent_instructions import (
-    ELABORATOR_INSTRUCTIONS,
-    VALIDATOR_INSTRUCTIONS,
-    FINALIZER_INSTRUCTIONS,
-    TEST_GENERATOR_INSTRUCTIONS,
-    CODE_GENERATOR_INSTRUCTIONS,
-    CODE_REVIEWER_INSTRUCTIONS,
-    NFR_ANALYSIS_PROMPT_TEMPLATE,
-    JIRA_AGENT_INSTRUCTIONS
-)
 
 # Initialize Swarm client
 client = Swarm()
 
 # Initialize agents
 def create_agents():
-    elaborator = Agent(
-        name="Requirement Elaborator",
-        instructions=ELABORATOR_INSTRUCTIONS,
-    )
-    
-    validator = Agent(
-        name="Requirement Validator",
-        instructions=VALIDATOR_INSTRUCTIONS,
-    )
-
-    finalizer = Agent(
-        name="Requirement Finalizer",
-        instructions=FINALIZER_INSTRUCTIONS,
-    )
-
-    test_generator = Agent(
-        name="Test Case Generator",
-        instructions=TEST_GENERATOR_INSTRUCTIONS,
-    )
-
-    code_generator = Agent(
-        role=CODE_GENERATOR_INSTRUCTIONS["role"],
-        goal=CODE_GENERATOR_INSTRUCTIONS["goal"],
-        backstory=CODE_GENERATOR_INSTRUCTIONS["backstory"],
-        instructions=CODE_GENERATOR_INSTRUCTIONS["instructions"],
-    )
-
-    code_reviewer = Agent(
-        name="Code Reviewer",
-        instructions=CODE_REVIEWER_INSTRUCTIONS,
-    )
-
-    jira_creator = Agent(
-        name="Jira Ticket Creator",
-        instructions=JIRA_AGENT_INSTRUCTIONS,
-    )
+    elaborator = ElaboratorAgent().get_agent()
+    validator = ValidatorAgent().get_agent()
+    finalizer = FinalizerAgent().get_agent()
+    test_generator = TestGeneratorAgent().get_agent()
+    code_generator = CodeGeneratorAgent().get_agent()
+    code_reviewer = CodeReviewerAgent().get_agent()
+    jira_creator = JiraAgent().get_agent()
     
     return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator
 
@@ -219,10 +187,7 @@ if st.button("Analyze"):
                 with tabs[current_tab]:
                     st.subheader("Non-Functional Requirements Analysis")
                     handle_chunk, nfr_analysis_content = stream_content(tabs[current_tab])
-                    nfr_prompt = NFR_ANALYSIS_PROMPT_TEMPLATE.format(
-                        nfr_content=nfr_content,
-                        app_type=app_type
-                    )
+                    nfr_prompt = ElaboratorAgent.get_nfr_analysis_prompt(nfr_content, app_type)
                     
                     nfr_analysis_stream = client.run(
                         agent=elaborator,
