@@ -1,5 +1,6 @@
 """Requirement Elaborator Agent"""
-from swarm import Agent
+from swarm import Agent, Swarm
+from typing import Dict, List, Tuple, Generator
 
 class ElaboratorAgent:
     INSTRUCTIONS = """You are a requirement analysis expert. When given a single line requirement and application type:
@@ -11,14 +12,38 @@ class ElaboratorAgent:
         4. Identify potential edge cases
         5. Suggest acceptance criteria"""
 
-    def __init__(self):
+    def __init__(self, client: Swarm):
         self.agent = Agent(
             name="Requirement Elaborator",
             instructions=self.INSTRUCTIONS
         )
+        self.client = client
 
-    def get_agent(self):
-        return self.agent
+    def elaborate_requirements(self, requirement: str, app_type: str) -> Generator:
+        """
+        Elaborate the given requirement based on application type.
+        Returns the raw stream from the agent.
+        """
+        initial_prompt = f"Requirement: {requirement}\nApplication Type: {app_type}"
+        
+        return self.client.run(
+            agent=self.agent,
+            messages=[{"role": "user", "content": initial_prompt}],
+            stream=True
+        )
+
+    def analyze_nfr(self, nfr_content: str, app_type: str) -> Generator:
+        """
+        Analyze non-functional requirements.
+        Returns the raw stream from the agent.
+        """
+        nfr_prompt = self.get_nfr_analysis_prompt(nfr_content, app_type)
+        
+        return self.client.run(
+            agent=self.agent,
+            messages=[{"role": "user", "content": nfr_prompt}],
+            stream=True
+        )
 
     @staticmethod
     def get_nfr_analysis_prompt(nfr_content: str, app_type: str) -> str:

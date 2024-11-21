@@ -1,5 +1,6 @@
 """Code Reviewer Agent"""
-from swarm import Agent
+from swarm import Agent, Swarm
+from typing import Generator
 
 class CodeReviewerAgent:
     INSTRUCTIONS = """You are a senior software engineer specializing in code review. Review the code for:
@@ -82,10 +83,44 @@ class CodeReviewerAgent:
         4. Security concerns
         5. Performance optimizations"""
 
-    def __init__(self):
+    def __init__(self, client: Swarm):
         self.agent = Agent(
             name="Code Reviewer",
             instructions=self.INSTRUCTIONS
+        )
+        self.client = client
+
+    def review_code(
+        self,
+        final_requirements: str,
+        generated_code: str,
+        test_cases: str,
+        nfr_analysis: str = ""
+    ) -> Generator:
+        """
+        Review generated code against requirements.
+        
+        Args:
+            final_requirements: Final detailed requirements
+            generated_code: Generated code to review
+            test_cases: Generated test cases
+            nfr_analysis: Optional NFR analysis
+            
+        Returns:
+            Generator for the review stream
+        """
+        nfr_section = f"\nNon-Functional Requirements:\n{nfr_analysis}" if nfr_analysis else ""
+        review_prompt = f"""
+        Requirements: {final_requirements}
+        {nfr_section}
+        Generated Code: {generated_code}
+        Test Cases: {test_cases}
+        """
+        
+        return self.client.run(
+            agent=self.agent,
+            messages=[{"role": "user", "content": review_prompt}],
+            stream=True
         )
 
     def get_agent(self):

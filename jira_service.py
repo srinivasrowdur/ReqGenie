@@ -10,6 +10,7 @@ class JiraService:
         self.base_url = os.getenv('JIRA_BASE_URL')
         self.email = os.getenv('JIRA_EMAIL')
         self.api_token = os.getenv('JIRA_API_TOKEN')
+        self.issue_types = {}  # Initialize empty dict for issue types
         
         # Validate configuration
         if not all([self.base_url, self.email, self.api_token]):
@@ -91,14 +92,12 @@ class JiraService:
         """Create a Jira issue with the given payload."""
         try:
             url = f"{self.base_url}/rest/api/3/issue"
-            
             response = requests.post(
                 url,
                 data=json.dumps(payload),
                 headers=self.headers,
                 auth=self.auth
             )
-            
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -116,9 +115,9 @@ class JiraService:
 
     def create_epic(self, project_key: str, summary: str, description: str) -> str:
         """Create an epic and return its key."""
-        epic_type_id = self.issue_types.get('epic')
-        if not epic_type_id:
-            raise ValueError("Epic issue type not found in project")
+        # Get issue types if not already fetched
+        if not self.issue_types:
+            self.issue_types = self._get_project_issue_types(project_key)
             
         payload = {
             "fields": {
@@ -128,11 +127,10 @@ class JiraService:
                 "summary": summary,
                 "description": self._create_description(description),
                 "issuetype": {
-                    "id": epic_type_id
+                    "name": "Epic"  # Use name instead of ID
                 },
                 "labels": ["ReqGenie"]
-            },
-            "update": {}
+            }
         }
         
         response = self.create_issue(payload)
@@ -141,9 +139,9 @@ class JiraService:
     def create_story(self, project_key: str, summary: str, description: str, 
                     epic_key: str, story_points: int = None) -> str:
         """Create a story and return its key."""
-        story_type_id = self.issue_types.get('story')
-        if not story_type_id:
-            raise ValueError("Story issue type not found in project")
+        # Get issue types if not already fetched
+        if not self.issue_types:
+            self.issue_types = self._get_project_issue_types(project_key)
             
         payload = {
             "fields": {
@@ -153,11 +151,10 @@ class JiraService:
                 "summary": summary,
                 "description": self._create_description(description),
                 "issuetype": {
-                    "id": story_type_id
+                    "name": "Story"  # Use name instead of ID
                 },
                 "labels": ["ReqGenie"]
-            },
-            "update": {}
+            }
         }
         
         response = self.create_issue(payload)
@@ -166,9 +163,9 @@ class JiraService:
     def create_task(self, project_key: str, summary: str, description: str, 
                    parent_key: str) -> str:
         """Create a task and return its key."""
-        task_type_id = self.issue_types.get('task')
-        if not task_type_id:
-            raise ValueError("Task issue type not found in project")
+        # Get issue types if not already fetched
+        if not self.issue_types:
+            self.issue_types = self._get_project_issue_types(project_key)
             
         payload = {
             "fields": {
@@ -178,24 +175,35 @@ class JiraService:
                 "summary": summary,
                 "description": self._create_description(description),
                 "issuetype": {
-                    "id": task_type_id
+                    "name": "Task"  # Use name instead of ID
                 },
                 "labels": ["ReqGenie"]
-            },
-            "update": {
-                "issuelinks": [{
-                    "add": {
-                        "type": {
-                            "name": "Relates"
-                        },
-                        "outwardIssue": {
-                            "key": parent_key
-                        }
-                    }
-                }]
             }
         }
         
+        # Create the task first
         response = self.create_issue(payload)
-        return response["key"] 
-        return response["key"] 
+        task_key = response["key"]
+        
+        # Create a link to the parent story
+        self.create_link(task_key, parent_key, "Relates")
+        
+        return task_key
+
+    def create_link(self, outward_key: str, inward_key: str, link_type: str = "Relates") -> None:
+        """Create a link between two issues."""
+        url = f"{self.base_url}/rest/api/3/issueLink"
+        
+        payload = {
+            "outwardIssue": {"key": outward_key},
+            "inwardIssue": {"key": inward_key},
+            "type": {"name": link_type}
+        }
+        
+        response = requests.post(
+            url,
+            data=json.dumps(payload),
+            headers=self.headers,
+            auth=self.auth
+        )
+        response.raise_for_status()

@@ -1,5 +1,6 @@
 """Code Generator Agent"""
-from swarm import Agent
+from swarm import Agent, Swarm
+from typing import Generator, Optional
 
 class CodeGeneratorAgent:
     ROLE = "Full Stack Web Developer"
@@ -32,12 +33,58 @@ class CodeGeneratorAgent:
        - Include clear documentation
     """
 
-    def __init__(self):
+    def __init__(self, client: Swarm):
         self.agent = Agent(
             role=self.ROLE,
             goal=self.GOAL,
             backstory=self.BACKSTORY,
             instructions=self.INSTRUCTIONS
+        )
+        self.client = client
+
+    def generate_code(
+        self,
+        final_requirements: str,
+        programming_language: str,
+        app_type: str,
+        nfr_analysis: Optional[str] = None
+    ) -> Generator:
+        """
+        Generate code based on requirements.
+        
+        Args:
+            final_requirements: Final detailed requirements
+            programming_language: Target programming language
+            app_type: Type of application (Web Application/Web Service)
+            nfr_analysis: Optional NFR analysis
+            
+        Returns:
+            Generator for the code stream
+        """
+        nfr_section = f"\nNon-Functional Requirements:\n{nfr_analysis}" if nfr_analysis else ""
+        code_prompt = f"""
+        Based on the specifications, generate code in {programming_language}.
+        Application Type: {app_type}
+        
+        Final Requirements:
+        {final_requirements}
+        {nfr_section}
+        
+        If Web Application:
+        - Include frontend code (HTML/CSS if needed)
+        - Include necessary routing
+        - Include user interface components
+        
+        If Web Service:
+        - Focus on API endpoints
+        - Include request/response handling
+        - Include data models
+        """
+        
+        return self.client.run(
+            agent=self.agent,
+            messages=[{"role": "user", "content": code_prompt}],
+            stream=True
         )
 
     def get_agent(self):
