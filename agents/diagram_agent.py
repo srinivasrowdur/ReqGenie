@@ -7,55 +7,36 @@ class DiagramAgent:
     INSTRUCTIONS = """You are an expert in creating serverless architecture diagrams using the Python 'diagrams' library.
     You MUST respond with ONLY valid JSON in the exact format shown below, with no additional text or formatting:
 
-    Core Serverless Components for GCP:
-    1. Frontend/API Layer:
-       - from diagrams.gcp.api import APIGateway
-       - from diagrams.gcp.network import LoadBalancing
-    
-    2. Compute Layer:
-       - from diagrams.gcp.compute import Functions, Run
-    
-    3. Data Layer:
-       - from diagrams.gcp.database import Firestore
-       - from diagrams.gcp.storage import Storage
-    
-    4. Event/Message Layer:
-       - from diagrams.gcp.analytics import Pubsub
-    
-    5. Security Layer:
-       - from diagrams.gcp.security import Iam, KeyManagementService
-    
-    6. Monitoring Layer:
-       - from diagrams.gcp.operations import Monitoring, Logging
+    For GCP services, use these correct import paths:
+    - from diagrams.gcp.compute import Functions, Run
+    - from diagrams.gcp.api import APIGateway
+    - from diagrams.gcp.database import Firestore
+    - from diagrams.gcp.storage import Storage
+    - from diagrams.gcp.analytics import Pubsub
+    - from diagrams.gcp.security import Iam, KMS
+    - from diagrams.gcp.operations import Monitoring
 
-    Example JSON structure for a simple serverless app:
+    For AWS services, use these correct import paths:
+    - from diagrams.aws.compute import Lambda
+    - from diagrams.aws.mobile import APIGateway
+    - from diagrams.aws.database import DynamodbTable
+    - from diagrams.aws.storage import SimpleStorageServiceS3
+    - from diagrams.aws.integration import SimpleQueueServiceSqs
+    - from diagrams.aws.security import Cognito, SecretsManager
+    - from diagrams.aws.management import Cloudwatch
+
     {
         "imports": [
             "from diagrams import Diagram, Cluster, Edge",
-            "from diagrams.gcp.api import APIGateway",
             "from diagrams.gcp.compute import Functions",
-            "from diagrams.gcp.database import Firestore",
-            "from diagrams.gcp.security import Iam",
-            "from diagrams.gcp.operations import Monitoring"
+            "from diagrams.gcp.api import APIGateway"
         ],
         "nodes": [
             {
-                "name": "api",
+                "name": "api_gateway",
                 "type": "APIGateway",
                 "label": "API Gateway",
                 "cluster": null
-            },
-            {
-                "name": "auth_fn",
-                "type": "Functions",
-                "label": "Auth Service",
-                "cluster": "Compute"
-            },
-            {
-                "name": "db",
-                "type": "Firestore",
-                "label": "User Data",
-                "cluster": "Data"
             }
         ],
         "clusters": [
@@ -63,41 +44,28 @@ class DiagramAgent:
                 "name": "compute",
                 "label": "Compute",
                 "parent": null
-            },
-            {
-                "name": "data",
-                "label": "Data",
-                "parent": null
             }
         ],
         "connections": [
             {
-                "from": "api",
+                "from": "api_gateway",
                 "to": "auth_fn",
                 "edge_attrs": {
                     "color": "blue",
                     "label": "API requests"
-                }
-            },
-            {
-                "from": "auth_fn",
-                "to": "db",
-                "edge_attrs": {
-                    "color": "green",
-                    "label": "Read/Write"
                 }
             }
         ]
     }
 
     IMPORTANT:
-    1. Keep the architecture simple and focused
-    2. Use only serverless components
-    3. Group related services in logical clusters
-    4. Show clear data flow between services
-    5. Include basic security and monitoring
-    6. Use proper edge colors and labels
-    7. All node names must be valid Python identifiers"""
+    1. Use ONLY the correct import paths for the specified platform
+    2. Group related services in logical clusters
+    3. Show clear data flow between services
+    4. Include monitoring and security services
+    5. Use proper edge colors and labels
+    6. All node names must be valid Python identifiers
+    7. Keep the diagram clean and readable"""
 
     def __init__(self, client: Swarm):
         self.agent = Agent(
@@ -114,36 +82,18 @@ class DiagramAgent:
         style: Optional[dict] = None
     ) -> str:
         """Generate diagram code based on requirements."""
-        diagram_prompt = f"""Analyze the following requirement and create a serverless architecture diagram:
+        diagram_prompt = f"""Analyze the following requirement and create a {platform.upper()} serverless architecture diagram:
 
         Requirement: {requirement}
         Architecture Type: {architecture_type}
         Platform: {platform}
 
-        IMPORTANT SERVERLESS GUIDELINES:
-        1. Use serverless-first approach:
-           - Cloud Functions or Cloud Run for compute
-           - Firestore/Datastore for databases
-           - Cloud Storage for static assets
-           - Pub/Sub for event-driven communication
-           - Cloud Tasks/Scheduler for background jobs
-        
-        2. Include event-driven patterns:
-           - Asynchronous processing
-           - Message-based communication
-           - Event triggers
-        
-        3. Show security components:
-           - IAM for authentication
-           - Cloud KMS for encryption
-           - Security Scanner for vulnerabilities
-        
-        4. Include monitoring and logging:
-           - Cloud Monitoring
-           - Cloud Logging
-           - Error Reporting
+        Create a serverless architecture using {platform.upper()} native services.
+        Include API Gateway, Functions/Lambda, Database, Storage, Security, and Monitoring components.
+        Show the data flow between services with proper edge colors and labels.
+        Group related services in logical clusters.
 
-        RESPOND ONLY WITH VALID JSON that defines a serverless architecture matching the requirements.
+        RESPOND ONLY WITH VALID JSON that defines the architecture diagram.
         """
 
         # Collect the complete response using streaming
