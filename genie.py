@@ -327,7 +327,6 @@ if st.button("Analyze"):
                 
                 # Get the complete diagram code
                 diagram_code = ''.join(filter(None, diagram_content))
-                diagram_code = diagram_generator.clean_code(diagram_code)
                 
                 # Show the diagram code in an expandable section
                 with st.expander("View Diagram Code"):
