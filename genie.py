@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 import os
 import json
+import tempfile
+import subprocess
+import sys
 from jira_service import JiraService
 from agents.elaborator_agent import ElaboratorAgent
 from agents.validator_agent import ValidatorAgent
@@ -9,6 +12,7 @@ from agents.test_generator_agent import TestGeneratorAgent
 from agents.code_generator_agent import CodeGeneratorAgent
 from agents.code_reviewer_agent import CodeReviewerAgent
 from agents.jira_agent import JiraAgent
+from agents.diagram_agent import DiagramAgent
 
 # Load environment variables before any other imports
 load_dotenv()
@@ -31,8 +35,9 @@ def create_agents(client: Swarm):
     code_generator = CodeGeneratorAgent(client)
     code_reviewer = CodeReviewerAgent(client)
     jira_creator = JiraAgent(client)
+    diagram_generator = DiagramAgent(client)
     
-    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator
+    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator, diagram_generator
 
 # Set page config
 st.set_page_config(
@@ -69,6 +74,12 @@ with st.sidebar:
         "Select Programming Language",
         ["Python", "JavaScript", "Java", "C#"],
         key="language"
+    )
+    cloud_environment = st.selectbox(
+        "Select Cloud Environment",
+        ["GCP", "AWS", "Azure"],
+        index=0,  # Default to GCP
+        key="cloud_env"
     )
     
     # Add NFR file upload
@@ -150,13 +161,13 @@ def get_tab_names(has_nfrs):
     base_tabs = ["Requirements"]
     if has_nfrs:
         base_tabs.append("NFR Analysis")
-    return base_tabs + ["Validation", "Final Specs", "Test Cases", "Code", "Review"]
+    return base_tabs + ["Validation", "Final Specs", "Test Cases", "Code", "Review", "Architecture"]
 
 if st.button("Analyze"):
     if requirement:
         try:
             # Create agents with client
-            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator = create_agents(client)
+            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator, diagram_generator = create_agents(client)
             
             # Determine if we have NFRs and create tabs accordingly
             has_nfrs = bool(nfr_content.strip())
@@ -286,7 +297,6 @@ if st.button("Analyze"):
                 st.subheader("Code Review Analysis")
                 handle_chunk, review_content = stream_content(tabs[current_tab])
                 
-                # Get code review stream from the agent
                 review_stream = code_reviewer.review_code(
                     final_requirements=final_requirements,
                     generated_code=generated_code,
@@ -297,76 +307,72 @@ if st.button("Analyze"):
                 for chunk in review_stream:
                     handle_chunk(chunk)
                 st.sidebar.success("✅ Code Review Complete")
+            current_tab += 1
 
-            # Create Jira tickets if enabled
-            if update_jira and jira_project:
-                with st.spinner("Creating Jira tickets..."):
-                    try:
-                        # Create a new section for Jira tickets
-                        st.subheader("Jira Tickets Created")
-                        
-                        # Get Jira tickets directly (no streaming)
-                        jira_tickets = jira_creator.create_tickets(
-                            requirement=requirement,
-                            elaboration=elaboration,
-                            final_requirements=final_requirements,
-                            test_cases=test_cases,
-                            project_key=jira_project,
-                            component=jira_component,
-                            nfr_analysis=nfr_analysis if has_nfrs else None
-                        )
-                        
-                        # Show the JSON response
-                        st.json(jira_tickets)
-                        
-                        # Create tickets in Jira
-                        with st.spinner("Creating tickets in Jira..."):
-                            jira_service = JiraService()
+            # Generate Architecture Diagram
+            with tabs[current_tab]:
+                st.subheader("Architecture Diagram")
+                handle_chunk, diagram_content = stream_content(tabs[current_tab])
+                
+                # Get diagram code stream from the agent
+                diagram_stream = diagram_generator.generate_diagram(
+                    requirement=requirement,
+                    architecture_type=app_type,
+                    platform=cloud_environment.lower(),
+                    style={"direction": "TB", "show_labels": True}
+                )
+                
+                for chunk in diagram_stream:
+                    handle_chunk(chunk)
+                
+                # Get the complete diagram code
+                diagram_code = ''.join(filter(None, diagram_content))
+                diagram_code = diagram_generator.clean_code(diagram_code)
+                
+                # Show the diagram code in an expandable section
+                with st.expander("View Diagram Code"):
+                    st.code(diagram_code, language="python")
+                
+                try:
+                    with st.spinner("Generating diagram..."):
+                        # Create a temporary directory for diagram generation
+                        with tempfile.TemporaryDirectory() as temp_dir:
+                            # Create paths
+                            temp_py_path = os.path.join(temp_dir, "diagram.py")
                             
-                            # Create epic
-                            epic_key = jira_service.create_epic(
-                                jira_project,
-                                jira_tickets["epic"]["summary"],
-                                jira_tickets["epic"]["description"]
+                            # Save the code
+                            with open(temp_py_path, "w") as f:
+                                f.write(diagram_code)
+                            
+                            # Execute the diagram code using subprocess
+                            process = subprocess.run(
+                                [sys.executable, temp_py_path],
+                                cwd=temp_dir,
+                                capture_output=True,
+                                text=True
                             )
-                            st.success(f"Created Epic: {epic_key}")
                             
-                            # Create stories
-                            for story in jira_tickets["stories"]:
-                                story_key = jira_service.create_story(
-                                    jira_project,
-                                    story["summary"],
-                                    story["description"],
-                                    epic_key,
-                                    story.get("story_points")
-                                )
-                                st.success(f"Created Story: {story_key}")
+                            if process.returncode != 0:
+                                st.error("Error executing diagram code:")
+                                st.error(process.stderr)
+                            else:
+                                # Look for the generated diagram
+                                diagram_files = [f for f in os.listdir(temp_dir) if f.endswith('.png')]
+                                if diagram_files:
+                                    diagram_path = os.path.join(temp_dir, diagram_files[0])
+                                    with open(diagram_path, "rb") as f:
+                                        st.image(f.read())
+                                else:
+                                    st.error("No diagram file generated")
+                                    st.error("Directory contents:")
+                                    st.code('\n'.join(os.listdir(temp_dir)))
+                                    st.error("Process output:")
+                                    st.code(process.stdout)
                                 
-                                # Create tasks for this story
-                                for task in jira_tickets["tasks"]:
-                                    task_key = jira_service.create_task(
-                                        jira_project,
-                                        task["summary"],
-                                        task["description"],
-                                        story_key
-                                    )
-                                    st.success(f"Created Task: {task_key}")
-                                
-                                # Create test cases for this story
-                                for test in jira_tickets["tests"]:
-                                    test_key = jira_service.create_task(
-                                        jira_project,
-                                        test["summary"],
-                                        test["description"],
-                                        story_key
-                                    )
-                                    st.success(f"Created Test: {test_key}")
-                            
-                            st.success(f"Successfully created all Jira tickets under Epic: {epic_key}")
-                            
-                    except Exception as e:
-                        st.error(f"Error creating Jira tickets: {str(e)}")
-                        st.error("Please check the error message and try again")
+                except Exception as e:
+                    st.error(f"Error generating diagram: {str(e)}")
+                
+                st.sidebar.success("✅ Architecture Diagram Generated")
 
             # Show completion message
             st.sidebar.success("✨ Analysis Complete!")

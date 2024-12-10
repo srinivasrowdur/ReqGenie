@@ -2,16 +2,18 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install git for swarm installation
-RUN apt-get update && apt-get install -y git && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install git and graphviz
+RUN apt-get update && apt-get install -y \
+    git \
+    graphviz \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install requirements
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Copy the application (will exclude files in .dockerignore)
+# Copy the application
 COPY . .
 
 # Set environment variables
