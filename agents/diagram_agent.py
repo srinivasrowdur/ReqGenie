@@ -46,33 +46,214 @@ class DiagramAgent:
         """
         # Map platform to appropriate import paths
         platform_imports = {
-            "gcp": """from diagrams import Diagram, Cluster
-from diagrams.gcp.compute import AppEngine, Functions, KubernetesEngine
-from diagrams.gcp.network import LoadBalancing, FirewallRules, VirtualPrivateCloud
-from diagrams.gcp.database import SQL, Firestore
-from diagrams.gcp.security import IAP, SecurityScanner
-from diagrams.gcp.devtools import ContainerRegistry
-from diagrams.gcp.storage import Storage""",
+            "gcp": """from diagrams import Diagram, Cluster, Edge
+from diagrams.gcp.analytics import BigQuery, Dataflow, PubSub
+from diagrams.gcp.compute import AppEngine, Functions, GKE, Run
+from diagrams.gcp.database import BigTable, SQL, Spanner
+from diagrams.gcp.network import LoadBalancing, CDN, DNS
+from diagrams.gcp.security import IAP, KMS, SecurityCommandCenter
+from diagrams.gcp.storage import GCS, Filestore
+from diagrams.gcp.api import APIGateway
+from diagrams.gcp.operations import Monitoring, Logging""",
             
-            "aws": """from diagrams import Diagram, Cluster
-from diagrams.aws.compute import EC2, ECS, Lambda, ElasticBeanstalk
-from diagrams.aws.network import ELB, VPC, APIGateway, CloudFront
+            "aws": """from diagrams import Diagram, Cluster, Edge
+from diagrams.aws.compute import EC2, ECS, Lambda, EKS
+from diagrams.aws.network import ELB, VPC, APIGateway, CloudFront, Route53
 from diagrams.aws.database import RDS, Dynamodb, ElastiCache
-from diagrams.aws.security import IAM, Cognito, WAF, Shield
+from diagrams.aws.security import IAM, Cognito, WAF, Shield, KMS
 from diagrams.aws.integration import SQS, SNS
 from diagrams.aws.storage import S3
-from diagrams.aws.network import Route53, PrivateSubnet, PublicSubnet
-from diagrams.aws.management import Cloudwatch, AutoScaling""",
+from diagrams.aws.management import Cloudwatch, AutoScaling
+from diagrams.aws.analytics import Redshift, Athena
+from diagrams.aws.ml import SageMaker""",
             
-            "azure": """from diagrams import Diagram, Cluster
-from diagrams.azure.compute import AppServices, FunctionApps, KubernetesServices, ContainerInstances
-from diagrams.azure.database import SQLDatabases, CosmosDb, CacheForRedis
+            "azure": """from diagrams import Diagram, Cluster, Edge
+from diagrams.azure.compute import AppServices, FunctionApps, AKS, ContainerInstances
+from diagrams.azure.database import DatabaseForPostgresqlServers, CosmosDb, CacheForRedis
 from diagrams.azure.network import LoadBalancers, ApplicationGateway, VirtualNetworks, CDNProfiles
-from diagrams.azure.security import KeyVaults, ActiveDirectory, SecurityCenter
+from diagrams.azure.security import KeyVaults, ActiveDirectory
 from diagrams.azure.storage import StorageAccounts, BlobStorage
-from diagrams.azure.web import AppServicePlans, APIConnections
-from diagrams.azure.identity import AppRegistrations, ManagedIdentities
-from diagrams.azure.integration import APIManagement, ServiceBus"""
+from diagrams.azure.web import AppServicePlans
+from diagrams.azure.analytics import Databricks, HDInsightClusters
+from diagrams.azure.integration import ServiceBus, EventGrids
+from diagrams.azure.monitoring import ApplicationInsights"""
+        }
+
+        # Platform-specific example diagrams
+        platform_examples = {
+            "gcp": """
+with Diagram("GCP Architecture", show=False):
+    # Define network components
+    dns = DNS("dns")
+    lb = LoadBalancing("lb")
+    api = APIGateway("api gateway")
+    
+    with Cluster("Security"):
+        security = [
+            IAP("iap"),
+            KMS("kms"),
+            SecurityCommandCenter("security")
+        ]
+    
+    with Cluster("Services"):
+        compute = [
+            AppEngine("service1"),
+            Run("service2"),
+            Functions("service3")
+        ]
+        
+        # Correct way to connect security to services
+        for sec in security:
+            for svc in compute:
+                sec >> Edge(color="red", label="protects") >> svc
+        
+        with Cluster("Data Layer"):
+            pubsub = PubSub("events")
+            
+            with Cluster("Processing"):
+                flow = Dataflow("stream")
+                # Single node to multiple nodes (works fine)
+                flow >> [
+                    BigQuery("warehouse"),
+                    GCS("storage")
+                ]
+            
+            with Cluster("Database"):
+                db_primary = SQL("primary")
+                # Use - for replication links
+                db_primary - SQL("replica")
+    
+    # Operations
+    monitoring = Monitoring("monitoring")
+    logging = Logging("logging")
+    
+    # Connect components correctly
+    dns >> lb >> api
+    
+    # Connect API to compute services individually
+    for svc in compute:
+        api >> svc
+        
+    # Connect compute to data services
+    for svc in compute:
+        svc >> pubsub
+        svc >> db_primary
+    
+    # Connect monitoring
+    for svc in compute:
+        svc >> Edge(color="blue", style="dashed") >> monitoring
+        svc >> Edge(color="blue", style="dashed") >> logging
+""",
+            "aws": """
+with Diagram("AWS Architecture", show=False):
+    route53 = Route53("dns")
+    lb = ELB("lb")
+    
+    with Cluster("VPC"):
+        api = APIGateway("api")
+        
+        with Cluster("Services"):
+            services = [
+                ECS("service1"),
+                Lambda("service2"),
+                EKS("service3")
+            ]
+        
+        with Cluster("Security"):
+            security = [
+                IAM("iam"),
+                WAF("waf"),
+                Shield("shield")
+            ]
+            
+            # Correct way to connect security to services
+            for sec in security:
+                for svc in services:
+                    sec >> Edge(color="red", label="protects") >> svc
+        
+        with Cluster("Data Layer"):
+            queue = SQS("queue")
+            topic = SNS("notifications")
+            
+            with Cluster("Database"):
+                db_primary = RDS("primary")
+                db_primary - RDS("replica")
+            
+            with Cluster("Cache"):
+                cache = ElastiCache("redis")
+    
+    # Connect components correctly
+    route53 >> lb >> api
+    
+    # Connect API to services individually
+    for svc in services:
+        api >> svc
+        svc >> queue
+        svc >> cache
+""",
+            "azure": """
+with Diagram("Azure Architecture", show=False):
+    gateway = ApplicationGateway("gateway")
+    
+    with Cluster("Platform"):
+        with Cluster("Security"):
+            security = [
+                KeyVaults("keyvault"),
+                ActiveDirectory("aad")
+            ]
+        
+        with Cluster("Frontend"):
+            front = [
+                AppServices("app1"),
+                AppServices("app2")
+            ]
+        
+        with Cluster("Processing"):
+            functions = [
+                FunctionApps("func1"),
+                FunctionApps("func2")
+            ]
+            
+            # Correct way to connect security to frontend and functions
+            for sec in security:
+                for f in front:
+                    sec >> Edge(color="red", label="protects") >> f
+                for func in functions:
+                    sec >> Edge(color="red", label="protects") >> func
+            
+            with Cluster("Events"):
+                bus = ServiceBus("events")
+                grid = EventGrids("grid")
+            
+            with Cluster("Data Store"):
+                cosmos = CosmosDb("nosql")
+                sql = DatabaseForPostgresqlServers("sql")
+                cache = CacheForRedis("cache")
+    
+    with Cluster("Monitoring"):
+        insights = ApplicationInsights("monitoring")
+    
+    # Connect components correctly
+    gateway >> front[0]
+    gateway >> front[1]
+    
+    # Connect frontend to functions
+    for f in front:
+        for func in functions:
+            f >> Edge(color="blue") >> func
+    
+    # Connect functions to data services
+    for func in functions:
+        func >> bus
+        func >> cosmos
+        func >> cache
+        
+    # Connect monitoring
+    for f in front:
+        f >> Edge(style="dashed") >> insights
+    for func in functions:
+        func >> Edge(style="dashed") >> insights
+"""
         }
 
         diagram_prompt = f"""Generate Python code for a diagram using the 'diagrams' library.
@@ -80,63 +261,81 @@ Do not include markdown code block markers (```).
 
 Use these imports:
 {platform_imports.get(platform.lower(), platform_imports['gcp'])}
-from diagrams import Edge
 
-IMPORTANT: Use EXACTLY this format for the Diagram instantiation:
-with Diagram(name="Architecture", direction="TB", filename="diagram.png", show=False):
+CRITICAL RULES:
+1. Use EXACTLY this format for the Diagram instantiation:
+   with Diagram(name="Architecture", direction="TB", filename="diagram.png", show=False):
 
-IMPORTANT CONNECTION RULES:
-1. Cannot connect lists directly to lists
-2. Must connect individual nodes or iterate through lists
-3. Use these patterns for connections:
-   # Single nodes
-   node1 >> node2
+2. NEVER connect lists directly to lists! This will cause TypeError.
+   INCORRECT: ❌
+   [node1, node2] >> [node3, node4]  # This will fail!
    
-   # Node to list
-   node1 >> [node2, node3]
-   
-   # List to node
-   [node1, node2] >> node3
-   
-   # For list to list, use a loop:
-   for source in source_list:
-       for target in target_list:
+   CORRECT: ✅
+   # Method 1: Connect each source to each target using loops
+   for source in [node1, node2]:
+       for target in [node3, node4]:
            source >> target
 
-Example structure:
+   # Method 2: Connect individual elements
+   node1 >> node3
+   node1 >> node4
+   node2 >> node3
+   node2 >> node4
+
+3. Valid connection patterns:
+   # Single node to single node
+   node1 >> node2
+
+   # Single node to multiple nodes (works)
+   node1 >> [node2, node3]
+
+   # Multiple nodes to single node (works)
+   [node1, node2] >> node3
+
+   # For list to list connections, ALWAYS use loops:
+   for source in source_list:
+       for target in target_list:
+           source >> Edge(color="blue") >> target
+
+4. For bidirectional connections with lists:
+   # INCORRECT: ❌
+   [node1, node2] << Edge(label="connects") << [node3, node4]
+   
+   # CORRECT: ✅
+   for source in [node1, node2]:
+       for target in [node3, node4]:
+           source << Edge(label="connects") << target
+
+Here's a reference example for {platform}:
+{platform_examples.get(platform.lower(), platform_examples['gcp'])}
+
+Example of correct list-to-list connection:
 '''
-from diagrams import Diagram, Cluster, Edge
-[import statements...]
+# Define service groups
+frontend = [AppEngine("fe1"), AppEngine("fe2")]
+backend = [Functions("be1"), Functions("be2")]
 
-with Diagram(name="Architecture", direction="TB", filename="diagram.png", show=False):
-    # External Services
-    gateway = Gateway("API Gateway")
-    
-    # Frontend Cluster
-    with Cluster("Frontend"):
-        frontend = [
-            WebServer("web1"),
-            WebServer("web2")
-        ]
-        
-        # Correct way to connect lists
-        gateway >> frontend
-        
-        # For complex connections between lists
-        for service in frontend:
-            service >> database
+# Connect groups correctly using loops
+for f in frontend:
+    for b in backend:
+        f >> Edge(color="blue", label="calls") >> b
+
+# Or connect specific paths
+frontend[0] >> backend[0]
+frontend[1] >> backend[1]
 '''
 
-The code should:
-1. Use logical clustering
-2. Add meaningful edge colors and styles
-3. Show clear data flow
-4. Group related services
-5. Use correct connection patterns
-6. Set show=False to prevent popup window
+Make sure to:
+1. Use meaningful cluster names
+2. Properly nest related services
+3. Show clear data flow between components
+4. Group related services in clusters
+5. Use descriptive labels
+6. Maintain proper hierarchy
+7. NEVER connect lists directly - use loops or individual connections
+8. Use appropriate services for {platform}
+"""
 
-Generate ONLY valid Python code that will work with the diagrams library."""
-        
         return self.client.run(
             agent=self.agent,
             messages=[{"role": "user", "content": diagram_prompt}],
