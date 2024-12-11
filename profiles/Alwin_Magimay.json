@@ -1,0 +1,200 @@
+{
+  "data": {
+    "id": "f87506a4-8a93-4125-a552-b1d397c444af",
+    "url": "https://www.crystalknows.com/p/f87506a4-8a93-4125-a552-b1d397c444af",
+    "content": {
+      "profile": {
+        "overview": [
+          "Alwin tends to be direct, task-focused, fast-paced, and resistant to rigid structures.",
+          "Alwin tends to communicate directly and make decisions independently.",
+          "Alwin is likely to be comfortable with direct communication and taking calculated risks.",
+          "Alwin tends to be a quick thinker, ambitious, and drawn to calculated risks.",
+          "Alwin tends to be enthusiastic and decisive, with a strong preference for autonomy."
+        ]
+      },
+      "behavior": {
+        "phrase": [
+          "Saying something bluntly without details",
+          "Driving others to action",
+          "Speaking up to get everyone back on topic in a meeting",
+          "Immediately projecting assertiveness and confidence"
+        ]
+      },
+      "drainer": {
+        "phrase": [
+          "Deep research and analysis",
+          "Keeping his opinion to himself",
+          "Failing to achieve goals",
+          "Slow pace of work"
+        ]
+      },
+      "strengths": {
+        "phrase": [
+          "Directly stating thoughts and opinions",
+          "Comfortably assuming ownership and responsibility over results",
+          "Being quick, independent and firm when making decisions",
+          "Committing to decisions quickly"
+        ]
+      },
+      "blindspots": {
+        "phrase": [
+          "May work too quickly through important decisions",
+          "Using a very goal-oriented approach that might ignore important details",
+          "May be overly brief in communication",
+          "May have trouble accepting another person's authority"
+        ]
+      },
+      "building_trust": {
+        "phrase": [
+          "Keep conversation brief",
+          "Don't be afraid to disagree",
+          "Avoid being quiet or reserved",
+          "Get right to the bottom line"
+        ]
+      },
+      "driving_action": {
+        "phrase": [
+          "Offer to do the prep work for him",
+          "Make the meeting brief, if possible",
+          "Remind him of the goal of the meeting",
+          "Mention what you will prepare beforehand"
+        ]
+      },
+      "following_up": {
+        "phrase": [
+          "Resist the temptation to apologize for being assertive",
+          "Provide a deadline for when you need an answer",
+          "Clearly communicate what you need",
+          "Ask yes/no questions about the current status"
+        ]
+      },
+      "negotiating": {
+        "phrase": [
+          "Stay focused on the goal",
+          "Challenge both parties to come up with a better solution",
+          "Project assertiveness and confidence",
+          "State what you want early in the conversation"
+        ]
+      },
+      "pricing": {
+        "phrase": [
+          "Compare your pricing with competitors",
+          "Allow some room for him to negotiate",
+          "Give him the bottom-line pricing without going into details",
+          "Show how he can save more money in the future"
+        ]
+      },
+      "product_demo": {
+        "phrase": [
+          "Avoid appearing unprepared or unsure of yourself",
+          "Skip small talk and jump right into the demo",
+          "Allow him to drive the pace",
+          "Ask him which features he is most interested in"
+        ]
+      },
+      "meeting": {
+        "phrase": [
+          "Prepare for pushback",
+          "Quickly address the purpose of the meeting",
+          "Make an effort to meet his goals",
+          "Keep it as short as possible"
+        ]
+      },
+      "motivation": {
+        "phrase": [
+          "Ambitious goals",
+          "Taking charge",
+          "Making quick decisions",
+          "Challenges"
+        ]
+      },
+      "communication": {
+        "phrase": [
+          "Keep conversation brief",
+          "Don't be afraid to disagree",
+          "Avoid being quiet or reserved",
+          "Get right to the bottom line"
+        ]
+      },
+      "selling": {
+        "phrase": [
+          "Project confidence",
+          "Make an effort to focus the conversation",
+          "Ask about his goals",
+          "Don't be thrown off by a blunt comment"
+        ]
+      },
+      "working_together": {
+        "phrase": [
+          "Stay focused on the bottom line",
+          "Give him a chance to take charge",
+          "Always focus on the team's overall goal",
+          "Get used to a fast work pace"
+        ]
+      },
+      "first_impressions": {
+        "phrase": [
+          "Project confidence",
+          "Make an effort to focus the conversation",
+          "Ask about his goals",
+          "Don't be thrown off by a blunt comment"
+        ]
+      },
+      "recommendations": {
+        "do": [
+          "Use an energetic, assertive tone",
+          "Highlight competitive advantages of your product",
+          "Speak with high energy and answer questions directly"
+        ],
+        "dont": [
+          "Don't be overly friendly; be assertive and push back when you need to",
+          "Don't sugarcoat or use vague, overly-optimistic language to describe the value of your product",
+          "Don't give in-depth product descriptions without explaining bottom-line impact"
+        ]
+      }
+    },
+    "verified": false,
+    "first_name": "Alwin",
+    "last_name": "Magimay",
+    "photo_url": "",
+    "images": {
+      "disc_map": "https://api.crystalknows.com/images/disc_map/6.png"
+    },
+    "qualities": [
+      "Direct",
+      "Persuasive",
+      "Decisive"
+    ],
+    "personalities": {
+      "disc_type": "Di",
+      "disc_degrees": {
+        "c": 0,
+        "s": 0,
+        "i": 25,
+        "d": 75
+      },
+      "disc_intensity": 53,
+      "behavioral_traits": {
+        "Dominance": 76,
+        "Expressiveness": 61,
+        "Leniency": 24,
+        "Pace": 73,
+        "Pragmatism": 51,
+        "Risk-Aversion": 30,
+        "Skepticism": 67,
+        "Social": 42
+      },
+      "archetype": "Driver",
+      "overview": "Alwin tends to be direct, task-focused, fast-paced, and resistant to rigid structures.",
+      "disc_degrees_number": 122,
+      "disc_percentages": {
+        "c": 0,
+        "s": 0,
+        "i": 25,
+        "d": 75
+      },
+      "enneagram_type": null,
+      "myers_briggs_type": "ENTP"
+    }
+  }
+}

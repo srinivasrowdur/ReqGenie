@@ -122,6 +122,8 @@ if selected_profile == "New Analysis":
                     filename = save_profile(profile_data)
                     if filename:
                         st.success(f"Profile saved as: {filename}")
+                        # Force a rerun to update the sidebar profile list
+                        st.rerun()
                     
                     # Display results in tabs
                     profile_tab, analysis_tab = st.tabs(["Profile Data", "Analysis"])
@@ -168,6 +170,12 @@ if selected_profile == "New Analysis":
                                 # DISC Profile
                                 if data.get("personalities", {}).get("disc_degrees"):
                                     st.subheader("📊 DISC Profile")
+                                    
+                                    # Add DISC Map image if available
+                                    if data.get("images", {}).get("disc_map"):
+                                        st.image(data["images"]["disc_map"], width=300)
+                                    
+                                    # DISC metrics
                                     disc = data["personalities"]["disc_degrees"]
                                     cols = st.columns(4)
                                     for type_, value in disc.items():
@@ -292,6 +300,12 @@ else:
             # DISC Profile
             if data.get("personalities", {}).get("disc_degrees"):
                 st.subheader("📊 DISC Profile")
+                
+                # Add DISC Map image if available
+                if data.get("images", {}).get("disc_map"):
+                    st.image(data["images"]["disc_map"], width=300)
+                
+                # DISC metrics
                 disc = data["personalities"]["disc_degrees"]
                 cols = st.columns(4)
                 for type_, value in disc.items():

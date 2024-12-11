@@ -1,0 +1,200 @@
+{
+  "data": {
+    "id": "3bdced19-91fb-498b-ba4f-39f3b68c6c3e",
+    "url": "https://www.crystalknows.com/p/3bdced19-91fb-498b-ba4f-39f3b68c6c3e",
+    "content": {
+      "profile": {
+        "overview": [
+          "Sriram may appreciate challenges and often enjoys taking the lead to produce results.",
+          "Sriram tends to be methodical but aggressive towards goals with a preference for efficiency.",
+          "Sriram likely are eager to challenge others with high expectations.",
+          "Sriram tends to be confident and fast-paced, especially when achieving ambitious goals.",
+          "Sriram may come off as very direct sometimes, and are likely most comfortable taking control."
+        ]
+      },
+      "behavior": {
+        "phrase": [
+          "Working independently to meet a deadline",
+          "Enjoying argument and debate",
+          "Setting ambitious goals for others",
+          "Getting frustrated if someone is late to a meeting"
+        ]
+      },
+      "drainer": {
+        "phrase": [
+          "Tangents unrelated to the main conversation",
+          "Following inflexible rules",
+          "People blindly supporting others",
+          "Slow pace of work"
+        ]
+      },
+      "strengths": {
+        "phrase": [
+          "Persistently pursuing important goals",
+          "Having a high tolerance for risk and bold decisions",
+          "Motivating others with ambitious challenges",
+          "Committing to decisions quickly"
+        ]
+      },
+      "blindspots": {
+        "phrase": [
+          "May have a hard time working in a supporting role",
+          "Working with a sense of urgency that may cause others unnecessary stress",
+          "Making changes quickly and decisively, potentially disrupting the work of others",
+          "May have trouble accepting another person's authority"
+        ]
+      },
+      "building_trust": {
+        "phrase": [
+          "Expect conversation to move quickly",
+          "Assert yourself with confidence",
+          "Be direct when you disagree",
+          "Get right to the bottom line"
+        ]
+      },
+      "driving_action": {
+        "phrase": [
+          "Make the meeting brief, if possible",
+          "Mention what you will prepare beforehand",
+          "Offer to do the prep work for them",
+          "Propose a specific time, but allow them to modify it"
+        ]
+      },
+      "following_up": {
+        "phrase": [
+          "Provide a deadline for when you need an answer",
+          "Ask yes/no questions about the current status",
+          "Resist the temptation to apologize for being assertive",
+          "Prepare specific questions to ask"
+        ]
+      },
+      "negotiating": {
+        "phrase": [
+          "Help them achieve their goals",
+          "Walk away from the conversation if necessary",
+          "Maintain effective control over information",
+          "State what you want early in the conversation"
+        ]
+      },
+      "pricing": {
+        "phrase": [
+          "Allow some room for them to negotiate",
+          "Show how they can save more money in the future",
+          "Compare your pricing with competitors",
+          "Focus on efficiency and cost-effectiveness"
+        ]
+      },
+      "product_demo": {
+        "phrase": [
+          "Avoid showing extra stuff that they have not asked for",
+          "Discuss measurable ways the product will impact them directly",
+          "Anticipate potential pushback at the end and be prepared to confidently defend your claims",
+          "Ask them which features they are most interested in"
+        ]
+      },
+      "meeting": {
+        "phrase": [
+          "Show decisiveness and confidence",
+          "Stay on topic",
+          "Be on time to the meeting",
+          "Keep it as short as possible"
+        ]
+      },
+      "motivation": {
+        "phrase": [
+          "Competition & winning",
+          "Professional growth",
+          "Leading the group",
+          "Challenges"
+        ]
+      },
+      "communication": {
+        "phrase": [
+          "Expect conversation to move quickly",
+          "Assert yourself with confidence",
+          "Be direct when you disagree",
+          "Get right to the bottom line"
+        ]
+      },
+      "selling": {
+        "phrase": [
+          "Explain how you're helping them achieve their goals",
+          "Expect them to offer feedback",
+          "Be assertive and direct",
+          "Don't be thrown off by a blunt comment"
+        ]
+      },
+      "working_together": {
+        "phrase": [
+          "Expect some healthy competition",
+          "Expect them to adapt quickly to change",
+          "Produce measurable results",
+          "Get used to a fast work pace"
+        ]
+      },
+      "first_impressions": {
+        "phrase": [
+          "Explain how you're helping them achieve their goals",
+          "Expect them to offer feedback",
+          "Be assertive and direct",
+          "Don't be thrown off by a blunt comment"
+        ]
+      },
+      "recommendations": {
+        "do": [
+          "Highlight competitive advantages of your product",
+          "Place a high value on being time-efficient rather than filling it up with smalltalk",
+          "Use an energetic, assertive tone"
+        ],
+        "dont": [
+          "Don't sugarcoat or use vague, overly-optimistic language to describe the value of your product",
+          "Don't take their schedule lightly; respect the call's length and end on-schedule",
+          "Don't be overly friendly; be assertive and push back when you need to"
+        ]
+      }
+    },
+    "verified": false,
+    "first_name": "Sriram",
+    "last_name": "Upadhyayula",
+    "photo_url": "https://static.licdn.com/aero-v1/sc/h/9c8pery4andzj6ohjkjp54ma2",
+    "images": {
+      "disc_map": "https://api.crystalknows.com/images/disc_map/7.png"
+    },
+    "qualities": [
+      "Assertive",
+      "Confident",
+      "Hard-working"
+    ],
+    "personalities": {
+      "disc_type": "D",
+      "disc_degrees": {
+        "c": 0,
+        "s": 0,
+        "i": 0,
+        "d": 99
+      },
+      "disc_intensity": 30,
+      "behavioral_traits": {
+        "Dominance": 64,
+        "Expressiveness": 51,
+        "Leniency": 35,
+        "Pace": 60,
+        "Pragmatism": 53,
+        "Risk-Aversion": 41,
+        "Skepticism": 62,
+        "Social": 39
+      },
+      "archetype": "Captain",
+      "overview": "Sriram may appreciate challenges and often enjoys taking the lead to produce results.",
+      "disc_degrees_number": 139,
+      "disc_percentages": {
+        "c": 0,
+        "s": 0,
+        "i": 0,
+        "d": 99
+      },
+      "enneagram_type": null,
+      "myers_briggs_type": "ESTP"
+    }
+  }
+}
