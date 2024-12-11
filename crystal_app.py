@@ -30,10 +30,9 @@ def save_profile(profile_data: dict) -> str:
     """Save profile to disk and return filename"""
     if "data" in profile_data:
         data = profile_data["data"]
-        # Create filename from name and timestamp
+        # Create filename with just first and last name
         name = f"{data.get('first_name', 'unknown')}_{data.get('last_name', 'user')}"
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{name}_{timestamp}.json"
+        filename = f"{name}.json"
         
         # Save profile
         filepath = PROFILES_DIR / filename
@@ -51,8 +50,13 @@ def load_profile(filename: str) -> dict:
 
 # Function to get all saved profiles
 def get_saved_profiles() -> list:
-    """Get list of saved profile files"""
-    return sorted([f.name for f in PROFILES_DIR.glob("*.json")])
+    """Get list of saved profile files and return clean names"""
+    profiles = []
+    for f in PROFILES_DIR.glob("*.json"):
+        # Remove .json extension and replace underscores with spaces
+        name = f.stem.replace('_', ' ')
+        profiles.append((name, f.name))  # Store both display name and filename
+    return sorted(profiles)
 
 # Set page config
 st.set_page_config(
@@ -82,11 +86,18 @@ with st.sidebar:
     st.subheader("Profile Management")
     saved_profiles = get_saved_profiles()
     if saved_profiles:
-        selected_profile = st.selectbox(
+        # Create a list of display names and a mapping to filenames
+        display_names = ["New Analysis"] + [profile[0] for profile in saved_profiles]
+        filename_map = {profile[0]: profile[1] for profile in saved_profiles}
+        
+        selected_display = st.selectbox(
             "Select Profile",
-            ["New Analysis"] + saved_profiles,
+            display_names,
             key="profile_selector"
         )
+        
+        # Convert display name back to filename when needed
+        selected_profile = "New Analysis" if selected_display == "New Analysis" else filename_map[selected_display]
     else:
         selected_profile = "New Analysis"
         st.info("No saved profiles yet")
