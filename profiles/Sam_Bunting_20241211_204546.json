@@ -1,0 +1,200 @@
+{
+  "data": {
+    "id": "8eb84c8b-9990-4cef-9e0b-8e6dfba8dec0",
+    "url": "https://www.crystalknows.com/p/8eb84c8b-9990-4cef-9e0b-8e6dfba8dec0",
+    "content": {
+      "profile": {
+        "overview": [
+          "Sam often prefers to minimize unknowns, striving to understand the rationale behind everything.",
+          "Sam tends to be pragmatic, independent, and logical when making decisions.",
+          "Sam tends to be a highly-focused executer who gets right to the point in a conversation.",
+          "Sam may often ask precise questions and are likely to enjoy digging into specifics to make decisions.",
+          "Sam tends to be direct in verbalizing concerns and likely will not leave things open to interpretation."
+        ]
+      },
+      "behavior": {
+        "phrase": [
+          "Questioning a lack of logic and analysis",
+          "Doubting the authenticity of an advertisement or sales pitch",
+          "Feeling annoyed by an exaggeration",
+          "Making decisions based purely on logic"
+        ]
+      },
+      "drainer": {
+        "phrase": [
+          "Taking on an unclear task",
+          "Expressive displays of emotion",
+          "Unclear goals",
+          "Indecision from others"
+        ]
+      },
+      "strengths": {
+        "phrase": [
+          "Asking important questions",
+          "Communicating directly with facts",
+          "Being efficient and oriented towards constant improvement in performance",
+          "Moving forward with persistence"
+        ]
+      },
+      "blindspots": {
+        "phrase": [
+          "May offend or upset others with challenging questions",
+          "May express critical feedback very quickly and bluntly",
+          "May display frustration when standards for performance are not met",
+          "May not show sensitivity toward others' feelings"
+        ]
+      },
+      "building_trust": {
+        "phrase": [
+          "Be prepared for pushback",
+          "Don't get offended if they ends the conversation abruptly",
+          "Stay objective rather than emotional",
+          "Avoid bringing up unrelated information"
+        ]
+      },
+      "driving_action": {
+        "phrase": [
+          "Ask them to propose the agenda",
+          "Allow them to propose a time",
+          "Propose a specific time, but allow them to modify it",
+          "Minimize the number of people involved in the meeting"
+        ]
+      },
+      "following_up": {
+        "phrase": [
+          "Give them more time to consider the options if they need it",
+          "Be specific about when and why you need an answer.",
+          "Prepare specific questions to ask",
+          "Make clear why you need their approval or input"
+        ]
+      },
+      "negotiating": {
+        "phrase": [
+          "Be prepared to back up your statements",
+          "Prepare for objections against bold claims",
+          "Set expectations for process and rules",
+          "Assert your own authority"
+        ]
+      },
+      "pricing": {
+        "phrase": [
+          "Be fully transparent about your benefits and limitations",
+          "Demonstrate the logic behind your pricing",
+          "Focus on efficiency and cost-effectiveness",
+          "Provide full item lists and breakdowns"
+        ]
+      },
+      "product_demo": {
+        "phrase": [
+          "Clearly explain what problem your product will solve",
+          "Acknowledge anything that goes wrong in the demo before they do",
+          "Ensure you're avoiding potential glitches beforehand by double-checking your technology",
+          "Avoid cutting them off if they are asking a question"
+        ]
+      },
+      "meeting": {
+        "phrase": [
+          "Keep it formal and business-like",
+          "Come in prepared for any question",
+          "Minimize the amount of open-ended questions",
+          "Address necessary details"
+        ]
+      },
+      "motivation": {
+        "phrase": [
+          "Proven solutions",
+          "Competence & skill",
+          "Eliminating waste and inefficiency",
+          "Providing feedback"
+        ]
+      },
+      "communication": {
+        "phrase": [
+          "Be prepared for pushback",
+          "Don't get offended if they ends the conversation abruptly",
+          "Stay objective rather than emotional",
+          "Avoid bringing up unrelated information"
+        ]
+      },
+      "selling": {
+        "phrase": [
+          "Be prepared to provide data and evidence",
+          "Expect heavy skepticism",
+          "Know why you're better than your competitors",
+          "Prove your skill or expertise"
+        ]
+      },
+      "working_together": {
+        "phrase": [
+          "Support any claims with proof",
+          "Offer blunt constructive criticism",
+          "Process conflict logically",
+          "Listen to their suggestions for improving efficiency"
+        ]
+      },
+      "first_impressions": {
+        "phrase": [
+          "Be prepared to provide data and evidence",
+          "Expect heavy skepticism",
+          "Know why you're better than your competitors",
+          "Prove your skill or expertise"
+        ]
+      },
+      "recommendations": {
+        "do": [
+          "Use a serious, business-like tone as opposed to a casual tone",
+          "Bring up potential issues upfront, rather than dancing around them",
+          "Be upfront and blunt about potential issues"
+        ],
+        "dont": [
+          "Don't use too much casual language; instead focus on professionalism",
+          "Don't prioritize smalltalk; focus on information specific to the topic or product",
+          "Don't bounce around between many conversation pieces; stay focused"
+        ]
+      }
+    },
+    "verified": false,
+    "first_name": "Sam",
+    "last_name": "Bunting",
+    "photo_url": "https://profile-photos.crys.io/ident:8eb84c8b-9990-4cef-9e0b-8e6dfba8dec0.jpg",
+    "images": {
+      "disc_map": "https://api.crystalknows.com/images/disc_map/9.png"
+    },
+    "qualities": [
+      "Persistent",
+      "Methodical",
+      "Independent"
+    ],
+    "personalities": {
+      "disc_degrees": {
+        "c": 50,
+        "i": 0,
+        "s": 0,
+        "d": 50
+      },
+      "disc_intensity": 32,
+      "disc_type": "CD",
+      "behavioral_traits": {
+        "Dominance": 61,
+        "Expressiveness": 39,
+        "Leniency": 41,
+        "Pace": 51,
+        "Pragmatism": 62,
+        "Risk-Aversion": 53,
+        "Skepticism": 65,
+        "Social": 34
+      },
+      "archetype": "Questioner",
+      "overview": "Sam often prefers to minimize unknowns, striving to understand the rationale behind everything.",
+      "disc_degrees_number": 184,
+      "disc_percentages": {
+        "c": 50,
+        "i": 0,
+        "s": 0,
+        "d": 50
+      },
+      "enneagram_type": null,
+      "myers_briggs_type": "ISTJ"
+    }
+  }
+}

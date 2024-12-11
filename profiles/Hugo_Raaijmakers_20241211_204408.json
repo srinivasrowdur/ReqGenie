@@ -1,0 +1,200 @@
+{
+  "data": {
+    "id": "2de1fe34-a587-4d76-97e3-67105bd89f92",
+    "url": "https://www.crystalknows.com/p/2de1fe34-a587-4d76-97e3-67105bd89f92",
+    "content": {
+      "profile": {
+        "overview": [
+          "Hugo tends to be fast-paced, goal-oriented, and sometimes overly blunt.",
+          "Hugo tends to communicate directly, resist ambiguity, and display strong persistence towards goals.",
+          "Hugo tends to be enthusiastic and decisive, with a strong preference for autonomy.",
+          "Hugo tends to communicate very directly with others, favoring action over prolonged analysis.",
+          "Hugo often prefers taking the lead, focusing on the big picture."
+        ]
+      },
+      "behavior": {
+        "phrase": [
+          "Feeling anxious about someone else making decisions on his behalf",
+          "Getting angsty if a conversation lasts too long",
+          "Speaking up to get everyone back on topic in a meeting",
+          "Setting ambitious goals for others"
+        ]
+      },
+      "drainer": {
+        "phrase": [
+          "Slow pace of work",
+          "Keeping his opinion to himself",
+          "Following inflexible rules",
+          "Deep research and analysis"
+        ]
+      },
+      "blindspots": {
+        "phrase": [
+          "May have trouble accepting another person's authority",
+          "Using a very goal-oriented approach that might ignore important details",
+          "Working with a sense of urgency that may cause others unnecessary stress",
+          "May work too quickly through important decisions"
+        ]
+      },
+      "building_trust": {
+        "phrase": [
+          "Get right to the bottom line",
+          "Don't be afraid to disagree",
+          "Assert yourself with confidence",
+          "Keep conversation brief"
+        ]
+      },
+      "driving_action": {
+        "phrase": [
+          "Make the meeting brief, if possible",
+          "Offer to do the prep work for him",
+          "Mention what you will prepare beforehand",
+          "Remind him of the goal of the meeting"
+        ]
+      },
+      "following_up": {
+        "phrase": [
+          "Provide a deadline for when you need an answer",
+          "Resist the temptation to apologize for being assertive",
+          "Ask yes/no questions about the current status",
+          "Clearly communicate what you need"
+        ]
+      },
+      "negotiating": {
+        "phrase": [
+          "State what you want early in the conversation",
+          "Challenge both parties to come up with a better solution",
+          "Walk away from the conversation if necessary",
+          "Stay focused on the goal"
+        ]
+      },
+      "pricing": {
+        "phrase": [
+          "Allow some room for him to negotiate",
+          "Compare your pricing with competitors",
+          "Show how he can save more money in the future",
+          "Give him the bottom-line pricing without going into details"
+        ]
+      },
+      "product_demo": {
+        "phrase": [
+          "Ask him which features he is most interested in",
+          "Skip small talk and jump right into the demo",
+          "Discuss measurable ways the product will impact him directly",
+          "Avoid appearing unprepared or unsure of yourself"
+        ]
+      },
+      "strengths": {
+        "phrase": [
+          "Committing to decisions quickly",
+          "Comfortably assuming ownership and responsibility over results",
+          "Having a high tolerance for risk and bold decisions",
+          "Directly stating thoughts and opinions"
+        ]
+      },
+      "meeting": {
+        "phrase": [
+          "Keep it as short as possible",
+          "Quickly address the purpose of the meeting",
+          "Stay on topic",
+          "Prepare for pushback"
+        ]
+      },
+      "communication": {
+        "phrase": [
+          "Get right to the bottom line",
+          "Don't be afraid to disagree",
+          "Assert yourself with confidence",
+          "Keep conversation brief"
+        ]
+      },
+      "first_impressions": {
+        "phrase": [
+          "Don't be thrown off by a blunt comment",
+          "Make an effort to focus the conversation",
+          "Expect him to offer feedback",
+          "Project confidence"
+        ]
+      },
+      "motivation": {
+        "phrase": [
+          "Challenges",
+          "Taking charge",
+          "Professional growth",
+          "Ambitious goals"
+        ]
+      },
+      "recommendations": {
+        "do": [
+          "Highlight competitive advantages of your product",
+          "Use an energetic, assertive tone",
+          "Place a high value on being time-efficient rather than filling it up with smalltalk"
+        ],
+        "dont": [
+          "Don't sugarcoat or use vague, overly-optimistic language to describe the value of your product",
+          "Don't be overly friendly; be assertive and push back when you need to",
+          "Don't take his schedule lightly; respect the call's length and end on-schedule"
+        ]
+      },
+      "selling": {
+        "phrase": [
+          "Don't be thrown off by a blunt comment",
+          "Make an effort to focus the conversation",
+          "Expect him to offer feedback",
+          "Project confidence"
+        ]
+      },
+      "working_together": {
+        "phrase": [
+          "Get used to a fast work pace",
+          "Give him a chance to take charge",
+          "Expect him to adapt quickly to change",
+          "Stay focused on the bottom line"
+        ]
+      }
+    },
+    "verified": true,
+    "first_name": "Hugo",
+    "last_name": "Raaijmakers",
+    "photo_url": null,
+    "images": {
+      "disc_map": "https://api.crystalknows.com/images/disc_map/7.png"
+    },
+    "qualities": [
+      "Assertive",
+      "Confident",
+      "Hard-working"
+    ],
+    "personalities": {
+      "behavioral_traits": {
+        "Dominance": 75,
+        "Expressiveness": 58,
+        "Leniency": 24,
+        "Pace": 71,
+        "Pragmatism": 53,
+        "Risk-Aversion": 34,
+        "Skepticism": 68,
+        "Social": 39
+      },
+      "disc_type": "D",
+      "disc_degrees": {
+        "c": 0,
+        "i": 0,
+        "s": 0,
+        "d": 99
+      },
+      "disc_intensity": 51,
+      "archetype": "Captain",
+      "overview": "Hugo tends to be fast-paced, goal-oriented, and sometimes overly blunt.",
+      "disc_degrees_number": 129,
+      "disc_percentages": {
+        "c": 0,
+        "i": 0,
+        "s": 0,
+        "d": 99
+      },
+      "enneagram_type": 8,
+      "myers_briggs_type": "ENFJ"
+    }
+  }
+}

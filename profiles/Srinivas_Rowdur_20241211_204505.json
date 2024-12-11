@@ -1,0 +1,200 @@
+{
+  "data": {
+    "id": "541eb008-3326-462c-b8b7-5194438dc64c",
+    "url": "https://www.crystalknows.com/p/541eb008-3326-462c-b8b7-5194438dc64c",
+    "content": {
+      "profile": {
+        "overview": [
+          "Srinivas tends to be a straight-shooter and are likely to eliminate uncertainty wherever possible.",
+          "Srinivas is likely to communicate mostly with logic and aggressively pursue goals and accuracy.",
+          "Srinivas is likely to avoid ambiguity, preferring to be upfront and descriptive with others.",
+          "Srinivas tends to be comfortable creating processes and procedures for others to follow.",
+          "Srinivas tends to remove emotions from decision-making as much as possible, valuing efficiency and logic."
+        ]
+      },
+      "behavior": {
+        "phrase": [
+          "Highly valuing accuracy",
+          "Emphasizing the importance of quality",
+          "Questioning inefficient practices",
+          "Feeling annoyed by an exaggeration"
+        ]
+      },
+      "drainer": {
+        "phrase": [
+          "Indecision from others",
+          "Inefficiencies and waste",
+          "Expressive displays of emotion",
+          "Taking on an unclear task"
+        ]
+      },
+      "strengths": {
+        "phrase": [
+          "Moving forward with persistence",
+          "Communicating directly with facts",
+          "Focusing on results and realistic expectations",
+          "Expressing their thoughts clearly"
+        ]
+      },
+      "blindspots": {
+        "phrase": [
+          "May not show sensitivity toward others' feelings",
+          "Addressing conflict with a firm, direct approach, which may be uncomfortable for some",
+          "May express critical feedback very quickly and bluntly",
+          "May offend or upset others with challenging questions"
+        ]
+      },
+      "building_trust": {
+        "phrase": [
+          "Avoid bringing up unrelated information",
+          "Don't get offended if they ends the conversation abruptly",
+          "Get right to the issue at hand",
+          "Be prepared for pushback"
+        ]
+      },
+      "driving_action": {
+        "phrase": [
+          "Ask them to propose the agenda",
+          "Propose a specific time, but allow them to modify it",
+          "Allow them to propose a time",
+          "Mention what you will prepare beforehand"
+        ]
+      },
+      "following_up": {
+        "phrase": [
+          "Give them more time to consider the options if they need it",
+          "Prepare specific questions to ask",
+          "Be specific about when and why you need an answer.",
+          "Ask yes/no questions about the current status"
+        ]
+      },
+      "negotiating": {
+        "phrase": [
+          "Assert your own authority",
+          "Prepare for objections against bold claims",
+          "Avoid giving into their demands easily",
+          "Be prepared to walk away"
+        ]
+      },
+      "pricing": {
+        "phrase": [
+          "Be fully transparent about your benefits and limitations",
+          "Focus on efficiency and cost-effectiveness",
+          "Demonstrate the logic behind your pricing",
+          "Show how they can save more money in the future"
+        ]
+      },
+      "product_demo": {
+        "phrase": [
+          "Avoid cutting them off if they are asking a question",
+          "Acknowledge anything that goes wrong in the demo before they do",
+          "Provide specific results and data from past implementation of your product",
+          "Clearly explain what problem your product will solve"
+        ]
+      },
+      "meeting": {
+        "phrase": [
+          "Address necessary details",
+          "Set a clear end time",
+          "Come in prepared for any question",
+          "Prove that you did your research"
+        ]
+      },
+      "motivation": {
+        "phrase": [
+          "Providing feedback",
+          "Personal space",
+          "Competence & skill",
+          "Proven solutions"
+        ]
+      },
+      "communication": {
+        "phrase": [
+          "Avoid bringing up unrelated information",
+          "Don't get offended if they ends the conversation abruptly",
+          "Get right to the issue at hand",
+          "Be prepared for pushback"
+        ]
+      },
+      "selling": {
+        "phrase": [
+          "Prove your skill or expertise",
+          "Get to the point quickly",
+          "Expect heavy skepticism",
+          "Be prepared to provide data and evidence"
+        ]
+      },
+      "working_together": {
+        "phrase": [
+          "Listen to their suggestions for improving efficiency",
+          "Offer blunt constructive criticism",
+          "Know that they prefers working alone",
+          "Support any claims with proof"
+        ]
+      },
+      "first_impressions": {
+        "phrase": [
+          "Prove your skill or expertise",
+          "Get to the point quickly",
+          "Expect heavy skepticism",
+          "Be prepared to provide data and evidence"
+        ]
+      },
+      "recommendations": {
+        "do": [
+          "Use a serious, business-like tone as opposed to a casual tone",
+          "Be upfront and blunt about potential issues",
+          "Bring up potential issues upfront, rather than dancing around them"
+        ],
+        "dont": [
+          "Don't use too much casual language; instead focus on professionalism",
+          "Don't bounce around between many conversation pieces; stay focused",
+          "Don't prioritize smalltalk; focus on information specific to the topic or product"
+        ]
+      }
+    },
+    "verified": false,
+    "first_name": "Srinivas",
+    "last_name": "Rowdur",
+    "photo_url": "https://static.licdn.com/aero-v1/sc/h/9c8pery4andzj6ohjkjp54ma2",
+    "images": {
+      "disc_map": "https://api.crystalknows.com/images/disc_map/9.png"
+    },
+    "qualities": [
+      "Persistent",
+      "Methodical",
+      "Independent"
+    ],
+    "personalities": {
+      "behavioral_traits": {
+        "Dominance": 58,
+        "Expressiveness": 43,
+        "Leniency": 42,
+        "Pace": 51,
+        "Pragmatism": 57,
+        "Risk-Aversion": 50,
+        "Skepticism": 60,
+        "Social": 39
+      },
+      "disc_type": "CD",
+      "disc_degrees": {
+        "c": 50,
+        "i": 0,
+        "s": 0,
+        "d": 50
+      },
+      "disc_intensity": 21,
+      "archetype": "Questioner",
+      "overview": "Srinivas tends to be a straight-shooter and are likely to eliminate uncertainty wherever possible.",
+      "disc_degrees_number": 175,
+      "disc_percentages": {
+        "c": 50,
+        "i": 0,
+        "s": 0,
+        "d": 50
+      },
+      "enneagram_type": null,
+      "myers_briggs_type": "ISTJ"
+    }
+  }
+}
