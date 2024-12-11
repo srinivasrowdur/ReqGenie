@@ -53,6 +53,7 @@ class FinalizerAgent:
         return self.client.run(
             agent=self.agent,
             messages=[{"role": "user", "content": final_prompt}],
+            model="gpt-4o-mini",
             stream=True
         )
 

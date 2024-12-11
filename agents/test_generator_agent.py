@@ -61,7 +61,8 @@ class TestGeneratorAgent:
     def __init__(self, client: Swarm):
         self.agent = Agent(
             name="Test Case Generator",
-            instructions=self.INSTRUCTIONS
+            instructions=self.INSTRUCTIONS,
+            model="gpt-4o-mini"
         )
         self.client = client
 

@@ -38,7 +38,8 @@ class CodeGeneratorAgent:
             role=self.ROLE,
             goal=self.GOAL,
             backstory=self.BACKSTORY,
-            instructions=self.INSTRUCTIONS
+            instructions=self.INSTRUCTIONS,
+            model="gpt-4o-mini"
         )
         self.client = client
 

@@ -15,7 +15,8 @@ class ElaboratorAgent:
     def __init__(self, client: Swarm):
         self.agent = Agent(
             name="Requirement Elaborator",
-            instructions=self.INSTRUCTIONS
+            instructions=self.INSTRUCTIONS,
+            model="gpt-4o-mini"
         )
         self.client = client
 
