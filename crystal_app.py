@@ -3,6 +3,7 @@ import os
 import streamlit as st
 from crystal_service import CrystalService
 from agents.crystal_agent import CrystalAgent
+from agents.personality_chat_agent import PersonalityChatAgent
 from swarm import Swarm
 import json
 import pathlib
@@ -17,6 +18,9 @@ client = Swarm()
 # Initialize Crystal service and agent
 crystal_service = CrystalService()
 crystal_agent = CrystalAgent(client)
+
+# Add after other agent initializations
+chat_agent = PersonalityChatAgent(client)
 
 # Create profiles directory if it doesn't exist
 PROFILES_DIR = pathlib.Path("profiles")
@@ -320,6 +324,17 @@ if selected_profile == "New Analysis":
                     with chat_tab:
                         st.info(f"💬 Have a conversation with {data.get('first_name', '')} based on their personality profile")
                         
+                        # Initialize chat history in session state if it doesn't exist
+                        if "chat_history" not in st.session_state:
+                            st.session_state.chat_history = []
+                        
+                        # Display chat history
+                        for message in st.session_state.chat_history:
+                            if message["role"] == "user":
+                                st.write(f"You: {message['content']}")
+                            else:
+                                st.write(f"🧞‍♂️ {data.get('first_name', '')}: {message['content']}")
+                        
                         # Add chat input
                         user_message = st.text_area(
                             "Your message:",
@@ -329,13 +344,34 @@ if selected_profile == "New Analysis":
                         
                         if st.button("Send", key="send_button"):
                             if user_message:
-                                with st.spinner("Analyzing response..."):
-                                    # Here we can add the logic to generate contextual responses
-                                    # based on the profile data and user's message
-                                    st.write("🧞‍♂️ Based on their profile:")
-                                    st.write("• Response will be tailored to their communication style")
-                                    st.write("• Will consider their personality traits")
-                                    st.write("• Will follow their preferred interaction patterns")
+                                # Add user message to history
+                                st.session_state.chat_history.append({"role": "user", "content": user_message})
+                                
+                                with st.spinner(f"Getting response from {data.get('first_name', '')}..."):
+                                    # Generate response using personality chat agent
+                                    response_stream = chat_agent.generate_response(
+                                        user_message=user_message,
+                                        profile_data=profile_data,
+                                        chat_history=st.session_state.chat_history
+                                    )
+                                    
+                                    # Collect response
+                                    full_response = []
+                                    for chunk in response_stream:
+                                        if isinstance(chunk, dict) and "content" in chunk:
+                                            content = chunk["content"]
+                                            if content is not None:
+                                                full_response.append(content)
+                                        elif isinstance(chunk, str) and chunk is not None:
+                                            full_response.append(chunk)
+                                    
+                                    response = "".join(full_response)
+                                    
+                                    # Add response to history
+                                    st.session_state.chat_history.append({"role": "assistant", "content": response})
+                                    
+                                    # Force a rerun to update the chat display
+                                    st.rerun()
 
                     st.sidebar.success("✨ Analysis Complete!")
             except Exception as e:
@@ -540,6 +576,17 @@ else:
     with chat_tab:
         st.info(f"💬 Have a conversation with {data.get('first_name', '')} based on their personality profile")
         
+        # Initialize chat history in session state if it doesn't exist
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+        
+        # Display chat history
+        for message in st.session_state.chat_history:
+            if message["role"] == "user":
+                st.write(f"You: {message['content']}")
+            else:
+                st.write(f"🧞‍♂️ {data.get('first_name', '')}: {message['content']}")
+        
         # Add chat input
         user_message = st.text_area(
             "Your message:",
@@ -549,10 +596,31 @@ else:
         
         if st.button("Send", key="send_button"):
             if user_message:
-                with st.spinner("Analyzing response..."):
-                    # Here we can add the logic to generate contextual responses
-                    # based on the profile data and user's message
-                    st.write("🧞‍♂️ Based on their profile:")
-                    st.write("• Response will be tailored to their communication style")
-                    st.write("• Will consider their personality traits")
-                    st.write("• Will follow their preferred interaction patterns")
+                # Add user message to history
+                st.session_state.chat_history.append({"role": "user", "content": user_message})
+                
+                with st.spinner(f"Getting response from {data.get('first_name', '')}..."):
+                    # Generate response using personality chat agent
+                    response_stream = chat_agent.generate_response(
+                        user_message=user_message,
+                        profile_data=profile_data,
+                        chat_history=st.session_state.chat_history
+                    )
+                    
+                    # Collect response
+                    full_response = []
+                    for chunk in response_stream:
+                        if isinstance(chunk, dict) and "content" in chunk:
+                            content = chunk["content"]
+                            if content is not None:
+                                full_response.append(content)
+                        elif isinstance(chunk, str) and chunk is not None:
+                            full_response.append(chunk)
+                    
+                    response = "".join(full_response)
+                    
+                    # Add response to history
+                    st.session_state.chat_history.append({"role": "assistant", "content": response})
+                    
+                    # Force a rerun to update the chat display
+                    st.rerun()
