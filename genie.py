@@ -309,6 +309,35 @@ if st.button("Analyze"):
                 st.sidebar.success("✅ Code Review Complete")
             current_tab += 1
 
+            # Create Jira tickets if enabled
+            if update_jira:
+                with st.spinner("Creating Jira tickets..."):
+                    try:
+                        # Get the complete review content
+                        review_text = ''.join(filter(None, review_content))
+                        
+                        # Create Jira tickets
+                        jira_stream = jira_creator.create_tickets(
+                            project_key=jira_project,
+                            component=jira_component,
+                            requirement=requirement,
+                            elaboration=elaboration,
+                            final_requirements=final_requirements,
+                            test_cases=test_cases,
+                            nfr_analysis=nfr_analysis if has_nfrs else None
+                        )
+                        
+                        # Show progress in sidebar
+                        for chunk in jira_stream:
+                            if isinstance(chunk, dict) and "content" in chunk:
+                                st.sidebar.info(chunk["content"])
+                            elif isinstance(chunk, str):
+                                st.sidebar.info(chunk)
+                        
+                        st.sidebar.success("✅ Jira Tickets Created")
+                    except Exception as e:
+                        st.sidebar.error(f"Failed to create Jira tickets: {str(e)}")
+
             # Generate Architecture Diagram
             with tabs[current_tab]:
                 st.subheader("Architecture Diagram")
