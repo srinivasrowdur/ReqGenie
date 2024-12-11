@@ -25,6 +25,15 @@ class DiagramAgent:
     - from diagrams.aws.security import Cognito, SecretsManager
     - from diagrams.aws.management import Cloudwatch
 
+    For Azure services, use these correct import paths:
+    - from diagrams.azure.compute import FunctionApps
+    - from diagrams.azure.web import AppServices
+    - from diagrams.azure.database import CosmosDb
+    - from diagrams.azure.storage import StorageAccounts
+    - from diagrams.azure.integration import ServiceBus
+    - from diagrams.azure.security import KeyVaults
+    - from diagrams.azure.monitor import Monitor
+
     {
         "imports": [
             "from diagrams import Diagram, Cluster, Edge",
