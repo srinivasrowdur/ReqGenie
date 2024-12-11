@@ -125,127 +125,190 @@ if selected_profile == "New Analysis":
                         # Force a rerun to update the sidebar profile list
                         st.rerun()
                     
-                    # Display results in tabs
-                    profile_tab, analysis_tab = st.tabs(["Profile Data", "Analysis"])
-                    
-                    with profile_tab:
-                        if "data" in profile_data:
-                            data = profile_data["data"]
-                            
-                            # Header with photo and basic info
-                            col1, col2 = st.columns([1, 3])
-                            with col1:
-                                if data.get("photo_url"):
-                                    st.image(data["photo_url"], width=200)
-                            with col2:
-                                st.title(f"{data.get('first_name', '')} {data.get('last_name', '')}")
-                                if data.get("personalities"):
-                                    pers = data["personalities"]
-                                    st.subheader(f"Type: {pers.get('disc_type', 'N/A')} · Archetype: {pers.get('archetype', 'N/A')}")
-                                    if pers.get("myers_briggs_type"):
-                                        st.write(f"Myers-Briggs: {pers['myers_briggs_type']}")
+                    # Display results - removed tabs, just show profile data
+                    if "data" in profile_data:
+                        data = profile_data["data"]
+                        
+                        # Header with photo and basic info
+                        col1, col2 = st.columns([1, 3])
+                        with col1:
+                            if data.get("photo_url"):
+                                st.image(data["photo_url"], width=200)
+                        with col2:
+                            st.title(f"{data.get('first_name', '')} {data.get('last_name', '')}")
+                            if data.get("personalities"):
+                                pers = data["personalities"]
+                                st.subheader(f"Type: {pers.get('disc_type', 'N/A')} · Archetype: {pers.get('archetype', 'N/A')}")
+                                if pers.get("myers_briggs_type"):
+                                    st.write(f"Myers-Briggs: {pers['myers_briggs_type']}")
+                                
+                                # Display qualities as tags
+                                if data.get("qualities"):
+                                    st.write("Key Qualities:")
+                                    cols = st.columns(len(data["qualities"]))
+                                    for idx, quality in enumerate(data["qualities"]):
+                                        cols[idx].markdown(f"<div style='background-color: #f0f2f6; padding: 8px; border-radius: 15px; text-align: center'>{quality}</div>", unsafe_allow_html=True)
+
+                            # Personality Overview
+                            if "content" in data and "profile" in data["content"]:
+                                st.subheader("💡 Overview")
+                                for point in data["content"]["profile"]["overview"]:
+                                    st.markdown(f"• {point}")
+
+                            # Behavioral Traits
+                            if data.get("personalities", {}).get("behavioral_traits"):
+                                st.subheader("🎯 Behavioral Traits")
+                                traits = data["personalities"]["behavioral_traits"]
+                                cols = st.columns(4)
+                                for idx, (trait, value) in enumerate(traits.items()):
+                                    col = cols[idx % 4]
+                                    col.metric(trait, f"{value}%")
                                     
-                                    # Display qualities as tags
-                                    if data.get("qualities"):
-                                        st.write("Key Qualities:")
-                                        cols = st.columns(len(data["qualities"]))
-                                        for idx, quality in enumerate(data["qualities"]):
-                                            cols[idx].markdown(f"<div style='background-color: #f0f2f6; padding: 8px; border-radius: 15px; text-align: center'>{quality}</div>", unsafe_allow_html=True)
+                            # DISC Profile
+                            if data.get("personalities", {}).get("disc_degrees"):
+                                st.subheader("📊 DISC Profile")
+                                
+                                # Add DISC Map image if available
+                                if data.get("images", {}).get("disc_map"):
+                                    st.image(data["images"]["disc_map"], width=300)
+                                
+                                # DISC metrics
+                                disc = data["personalities"]["disc_degrees"]
+                                cols = st.columns(4)
+                                for type_, value in disc.items():
+                                    cols["disc".index(type_)].metric(type_.upper(), f"{value}%")
 
-                                # Personality Overview
-                                if "content" in data and "profile" in data["content"]:
-                                    st.subheader("💡 Overview")
-                                    for point in data["content"]["profile"]["overview"]:
-                                        st.markdown(f"• {point}")
+                            # Create tabs for detailed information
+                            detail_tabs = st.tabs([
+                                "💪 Strengths & Motivations", 
+                                "🎯 Recommendations", 
+                                "🤝 Communication", 
+                                "💼 Sales Approach", 
+                                "🤔 Behavior & Drainers",
+                                "⚠️ Potential Blindspots"
+                            ])
 
-                                # Behavioral Traits
-                                if data.get("personalities", {}).get("behavioral_traits"):
-                                    st.subheader("🎯 Behavioral Traits")
-                                    traits = data["personalities"]["behavioral_traits"]
-                                    cols = st.columns(4)
-                                    for idx, (trait, value) in enumerate(traits.items()):
-                                        col = cols[idx % 4]
-                                        col.metric(trait, f"{value}%")
-                                        
-                                # DISC Profile
-                                if data.get("personalities", {}).get("disc_degrees"):
-                                    st.subheader("📊 DISC Profile")
-                                    
-                                    # Add DISC Map image if available
-                                    if data.get("images", {}).get("disc_map"):
-                                        st.image(data["images"]["disc_map"], width=300)
-                                    
-                                    # DISC metrics
-                                    disc = data["personalities"]["disc_degrees"]
-                                    cols = st.columns(4)
-                                    for type_, value in disc.items():
-                                        cols["disc".index(type_)].metric(type_.upper(), f"{value}%")
-
-                                # Create tabs for detailed information
-                                detail_tabs = st.tabs([
-                                    "💪 Strengths", 
-                                    "🎯 Recommendations", 
-                                    "🤝 Communication", 
-                                    "💼 Business", 
-                                    "⚠️ Potential Blindspots"
-                                ])
-
-                                # Strengths tab
-                                with detail_tabs[0]:
-                                    if "content" in data and "strengths" in data["content"]:
+                            # Strengths & Motivations tab
+                            with detail_tabs[0]:
+                                if "content" in data:
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.markdown("#### Strengths")
                                         for strength in data["content"]["strengths"]["phrase"]:
                                             st.markdown(f"✓ {strength}")
+                                    with col2:
+                                        st.markdown("#### Motivations")
+                                        for motivation in data["content"]["motivation"]["phrase"]:
+                                            st.markdown(f"🎯 {motivation}")
 
-                                # Recommendations tab
-                                with detail_tabs[1]:
-                                    if "content" in data and "recommendations" in data["content"]:
-                                        col1, col2 = st.columns(2)
-                                        with col1:
-                                            st.markdown("#### Do:")
-                                            for do in data["content"]["recommendations"]["do"]:
-                                                st.markdown(f"✓ {do}")
-                                        with col2:
-                                            st.markdown("#### Don't:")
-                                            for dont in data["content"]["recommendations"]["dont"]:
-                                                st.markdown(f"❌ {dont}")
+                            # Recommendations tab
+                            with detail_tabs[1]:
+                                if "content" in data and "recommendations" in data["content"]:
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.markdown("#### Do:")
+                                        for do in data["content"]["recommendations"]["do"]:
+                                            st.markdown(f"✓ {do}")
+                                    with col2:
+                                        st.markdown("#### Don't:")
+                                        for dont in data["content"]["recommendations"]["dont"]:
+                                            st.markdown(f"❌ {dont}")
 
-                                # Communication tab
-                                with detail_tabs[2]:
-                                    if "content" in data:
-                                        col1, col2 = st.columns(2)
-                                        with col1:
-                                            st.markdown("#### Building Trust")
-                                            for point in data["content"]["building_trust"]["phrase"]:
-                                                st.markdown(f"• {point}")
-                                        with col2:
-                                            st.markdown("#### Communication Style")
-                                            for point in data["content"]["communication"]["phrase"]:
-                                                st.markdown(f"• {point}")
+                            # Communication tab
+                            with detail_tabs[2]:
+                                if "content" in data:
+                                    # First row
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.markdown("#### Building Trust")
+                                        for point in data["content"]["building_trust"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    with col2:
+                                        st.markdown("#### Communication Style")
+                                        for point in data["content"]["communication"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    
+                                    st.markdown("---")
+                                    
+                                    # Second row
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.markdown("#### Working Together")
+                                        for point in data["content"]["working_together"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    with col2:
+                                        st.markdown("#### Driving Action")
+                                        for point in data["content"]["driving_action"]["phrase"]:
+                                            st.markdown(f"• {point}")
 
-                                # Business tab
-                                with detail_tabs[3]:
-                                    if "content" in data:
-                                        cols = st.columns(2)
-                                        with cols[0]:
-                                            st.markdown("#### Meeting Style")
-                                            for point in data["content"]["meeting"]["phrase"]:
-                                                st.markdown(f"• {point}")
-                                        with cols[1]:
-                                            st.markdown("#### Negotiation Style")
-                                            for point in data["content"]["negotiating"]["phrase"]:
-                                                st.markdown(f"• {point}")
+                            # Sales Approach tab
+                            with detail_tabs[3]:
+                                if "content" in data:
+                                    # First row: Meeting and First Impressions
+                                    cols = st.columns(2)
+                                    with cols[0]:
+                                        st.markdown("#### Meeting Style")
+                                        for point in data["content"]["meeting"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    with cols[1]:
+                                        st.markdown("#### First Impressions")
+                                        for point in data["content"]["first_impressions"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    
+                                    st.markdown("---")
+                                    
+                                    # Second row: Selling and Following Up
+                                    cols = st.columns(2)
+                                    with cols[0]:
+                                        st.markdown("#### Selling Approach")
+                                        for point in data["content"]["selling"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    with cols[1]:
+                                        st.markdown("#### Following Up")
+                                        for point in data["content"]["following_up"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    
+                                    st.markdown("---")
+                                    
+                                    # Third row: Product Demo and Pricing
+                                    cols = st.columns(2)
+                                    with cols[0]:
+                                        st.markdown("#### Product Demo")
+                                        for point in data["content"]["product_demo"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    with cols[1]:
+                                        st.markdown("#### Pricing Discussion")
+                                        for point in data["content"]["pricing"]["phrase"]:
+                                            st.markdown(f"• {point}")
+                                    
+                                    st.markdown("---")
+                                    
+                                    # Fourth row: Negotiation
+                                    st.markdown("#### Negotiation Style")
+                                    for point in data["content"]["negotiating"]["phrase"]:
+                                        st.markdown(f"• {point}")
 
-                                # Blindspots tab
-                                with detail_tabs[4]:
-                                    if "content" in data and "blindspots" in data["content"]:
-                                        for blindspot in data["content"]["blindspots"]["phrase"]:
-                                            st.markdown(f"⚠️ {blindspot}")
+                            # Behavior & Drainers tab
+                            with detail_tabs[4]:
+                                if "content" in data:
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.markdown("#### Common Behaviors")
+                                        for behavior in data["content"]["behavior"]["phrase"]:
+                                            st.markdown(f"• {behavior}")
+                                    with col2:
+                                        st.markdown("#### Energy Drainers")
+                                        for drainer in data["content"]["drainer"]["phrase"]:
+                                            st.markdown(f"⚠️ {drainer}")
 
-                        else:
-                            st.error("Invalid profile data format received")
-                    
-                    with analysis_tab:
-                        st.info("AI Analysis is only available for new profile analysis")
+                            # Blindspots tab
+                            with detail_tabs[5]:
+                                if "content" in data and "blindspots" in data["content"]:
+                                    for blindspot in data["content"]["blindspots"]["phrase"]:
+                                        st.markdown(f"⚠️ {blindspot}")
+
+                    else:
+                        st.error("Invalid profile data format received")
                     
                     st.sidebar.success("✨ Analysis Complete!")
             except Exception as e:
@@ -255,32 +318,29 @@ else:
     # Load and display saved profile
     profile_data = load_profile(selected_profile)
     
-    # Display profile data using existing display logic
-    profile_tab, analysis_tab = st.tabs(["Profile Data", "Analysis"])
-    
-    with profile_tab:
-        if "data" in profile_data:
-            data = profile_data["data"]
+    # Display profile data directly without tabs
+    if "data" in profile_data:
+        data = profile_data["data"]
+        
+        # Header with photo and basic info
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            if data.get("photo_url"):
+                st.image(data["photo_url"], width=200)
+        with col2:
+            st.title(f"{data.get('first_name', '')} {data.get('last_name', '')}")
+            if data.get("personalities"):
+                pers = data["personalities"]
+                st.subheader(f"Type: {pers.get('disc_type', 'N/A')} · Archetype: {pers.get('archetype', 'N/A')}")
+                if pers.get("myers_briggs_type"):
+                    st.write(f"Myers-Briggs: {pers['myers_briggs_type']}")
             
-            # Header with photo and basic info
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                if data.get("photo_url"):
-                    st.image(data["photo_url"], width=200)
-            with col2:
-                st.title(f"{data.get('first_name', '')} {data.get('last_name', '')}")
-                if data.get("personalities"):
-                    pers = data["personalities"]
-                    st.subheader(f"Type: {pers.get('disc_type', 'N/A')} · Archetype: {pers.get('archetype', 'N/A')}")
-                    if pers.get("myers_briggs_type"):
-                        st.write(f"Myers-Briggs: {pers['myers_briggs_type']}")
-                
-                # Display qualities as tags
-                if data.get("qualities"):
-                    st.write("Key Qualities:")
-                    cols = st.columns(len(data["qualities"]))
-                    for idx, quality in enumerate(data["qualities"]):
-                        cols[idx].markdown(f"<div style='background-color: #f0f2f6; padding: 8px; border-radius: 15px; text-align: center'>{quality}</div>", unsafe_allow_html=True)
+            # Display qualities as tags
+            if data.get("qualities"):
+                st.write("Key Qualities:")
+                cols = st.columns(len(data["qualities"]))
+                for idx, quality in enumerate(data["qualities"]):
+                    cols[idx].markdown(f"<div style='background-color: #f0f2f6; padding: 8px; border-radius: 15px; text-align: center'>{quality}</div>", unsafe_allow_html=True)
 
             # Personality Overview
             if "content" in data and "profile" in data["content"]:
@@ -313,18 +373,26 @@ else:
 
             # Create tabs for detailed information
             detail_tabs = st.tabs([
-                "💪 Strengths", 
+                "💪 Strengths & Motivations", 
                 "🎯 Recommendations", 
                 "🤝 Communication", 
-                "💼 Business", 
+                "💼 Sales Approach", 
+                "🤔 Behavior & Drainers",
                 "⚠️ Potential Blindspots"
             ])
 
-            # Strengths tab
+            # Strengths & Motivations tab
             with detail_tabs[0]:
-                if "content" in data and "strengths" in data["content"]:
-                    for strength in data["content"]["strengths"]["phrase"]:
-                        st.markdown(f"✓ {strength}")
+                if "content" in data:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("#### Strengths")
+                        for strength in data["content"]["strengths"]["phrase"]:
+                            st.markdown(f"✓ {strength}")
+                    with col2:
+                        st.markdown("#### Motivations")
+                        for motivation in data["content"]["motivation"]["phrase"]:
+                            st.markdown(f"🎯 {motivation}")
 
             # Recommendations tab
             with detail_tabs[1]:
@@ -342,6 +410,7 @@ else:
             # Communication tab
             with detail_tabs[2]:
                 if "content" in data:
+                    # First row
                     col1, col2 = st.columns(2)
                     with col1:
                         st.markdown("#### Building Trust")
@@ -351,28 +420,85 @@ else:
                         st.markdown("#### Communication Style")
                         for point in data["content"]["communication"]["phrase"]:
                             st.markdown(f"• {point}")
+                    
+                    st.markdown("---")
+                    
+                    # Second row
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("#### Working Together")
+                        for point in data["content"]["working_together"]["phrase"]:
+                            st.markdown(f"• {point}")
+                    with col2:
+                        st.markdown("#### Driving Action")
+                        for point in data["content"]["driving_action"]["phrase"]:
+                            st.markdown(f"• {point}")
 
-            # Business tab
+            # Sales Approach tab
             with detail_tabs[3]:
                 if "content" in data:
+                    # First row: Meeting and First Impressions
                     cols = st.columns(2)
                     with cols[0]:
                         st.markdown("#### Meeting Style")
                         for point in data["content"]["meeting"]["phrase"]:
                             st.markdown(f"• {point}")
                     with cols[1]:
-                        st.markdown("#### Negotiation Style")
-                        for point in data["content"]["negotiating"]["phrase"]:
+                        st.markdown("#### First Impressions")
+                        for point in data["content"]["first_impressions"]["phrase"]:
                             st.markdown(f"• {point}")
+                    
+                    st.markdown("---")
+                    
+                    # Second row: Selling and Following Up
+                    cols = st.columns(2)
+                    with cols[0]:
+                        st.markdown("#### Selling Approach")
+                        for point in data["content"]["selling"]["phrase"]:
+                            st.markdown(f"• {point}")
+                    with cols[1]:
+                        st.markdown("#### Following Up")
+                        for point in data["content"]["following_up"]["phrase"]:
+                            st.markdown(f"• {point}")
+                    
+                    st.markdown("---")
+                    
+                    # Third row: Product Demo and Pricing
+                    cols = st.columns(2)
+                    with cols[0]:
+                        st.markdown("#### Product Demo")
+                        for point in data["content"]["product_demo"]["phrase"]:
+                            st.markdown(f"• {point}")
+                    with cols[1]:
+                        st.markdown("#### Pricing Discussion")
+                        for point in data["content"]["pricing"]["phrase"]:
+                            st.markdown(f"• {point}")
+                    
+                    st.markdown("---")
+                    
+                    # Fourth row: Negotiation
+                    st.markdown("#### Negotiation Style")
+                    for point in data["content"]["negotiating"]["phrase"]:
+                        st.markdown(f"• {point}")
+
+            # Behavior & Drainers tab
+            with detail_tabs[4]:
+                if "content" in data:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("#### Common Behaviors")
+                        for behavior in data["content"]["behavior"]["phrase"]:
+                            st.markdown(f"• {behavior}")
+                    with col2:
+                        st.markdown("#### Energy Drainers")
+                        for drainer in data["content"]["drainer"]["phrase"]:
+                            st.markdown(f"⚠️ {drainer}")
 
             # Blindspots tab
-            with detail_tabs[4]:
+            with detail_tabs[5]:
                 if "content" in data and "blindspots" in data["content"]:
                     for blindspot in data["content"]["blindspots"]["phrase"]:
                         st.markdown(f"⚠️ {blindspot}")
 
-        else:
-            st.error("Invalid profile data format received")
-    
-    with analysis_tab:
-        st.info("AI Analysis is only available for new profile analysis")
+    else:
+        st.error("Invalid profile data format received")
