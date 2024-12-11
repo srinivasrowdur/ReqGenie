@@ -53,17 +53,37 @@ class PersonalityChatAgent:
         4. Matches their business and negotiation style
         5. Addresses potential objections or concerns
 
-        If no specific question is asked, suggest exploring these areas:
-        • "What key phrases would resonate with this person's communication style?"
+        Here are some strategic questions you can ask to improve your sales approach:
+
+        Negotiation Strategy:
+        • "What concessions or compromises might appeal to this personality type?"
+        • "What's their likely walkaway point or bottom line based on their traits?"
+        • "How should I frame the ROI discussion given their decision-making style?"
+        • "What negotiation tactics should I avoid with this personality?"
+
+        Communication Approach:
+        • "What key phrases would resonate with their communication style?"
         • "How should I structure my pitch considering their DISC type?"
-        • "What negotiation approach would work best with their personality?"
-        • "What are potential objections based on their behavioral traits?"
-        • "How should I pace the conversation given their preferences?"
-        • "What closing strategy would be most effective?"
+        • "What communication style mistakes should I avoid?"
         • "How can I build trust quickly with this personality type?"
+
+        Meeting & Process:
         • "What meeting format would they prefer?"
-        • "How should I handle pricing discussions with them?"
-        • "What follow-up approach would work best?"
+        • "How should I pace the conversation given their preferences?"
+        • "What's the optimal timeline for concluding negotiations?"
+        • "When and how should I discuss pricing?"
+
+        Objection Handling:
+        • "What are likely objections based on their behavioral traits?"
+        • "How should I address concerns about [specific aspect]?"
+        • "What validation or proof points would they value most?"
+        • "How do I overcome resistance while maintaining rapport?"
+
+        Closing Strategy:
+        • "What closing approach would be most effective?"
+        • "What follow-up cadence would work best?"
+        • "How do I know when they're ready to move forward?"
+        • "What signs indicate they're not fully convinced?"
 
         Provide specific, actionable advice that helps the user communicate more effectively with {data.get('first_name', 'unknown')}.
         """

@@ -324,6 +324,65 @@ if selected_profile == "New Analysis":
                     with chat_tab:
                         st.info(f"💬 Have a conversation with {data.get('first_name', '')} based on their personality profile")
                         
+                        # Sample questions dropdown
+                        question_categories = {
+                            "Select a sample question...": "",
+                            "Negotiation Strategy": {
+                                "What concessions might appeal?": "What concessions or compromises might appeal to this personality type?",
+                                "Likely walkaway point?": "What's their likely walkaway point or bottom line based on their traits?",
+                                "ROI discussion approach?": "How should I frame the ROI discussion given their decision-making style?"
+                            },
+                            "Communication Approach": {
+                                "Key resonating phrases?": "What key phrases would resonate with their communication style?",
+                                "Trust building strategy?": "How can I build trust quickly with this personality type?",
+                                "Communication mistakes to avoid?": "What communication style mistakes should I avoid?"
+                            },
+                            "Meeting & Process": {
+                                "Optimal meeting format?": "What meeting format would they prefer?",
+                                "Timeline for negotiations?": "What's the optimal timeline for concluding negotiations?",
+                                "Pricing discussion approach?": "When and how should I discuss pricing?"
+                            },
+                            "Objection Handling": {
+                                "Likely objections?": "What are likely objections based on their behavioral traits?",
+                                "Required proof points?": "What validation or proof points would they value most?",
+                                "Handling resistance?": "How do I overcome resistance while maintaining rapport?"
+                            },
+                            "Closing Strategy": {
+                                "Best closing approach?": "What closing approach would be most effective?",
+                                "Ready to move signs?": "How do I know when they're ready to move forward?",
+                                "Follow-up strategy?": "What follow-up cadence would work best?"
+                            }
+                        }
+                        
+                        # Two-level selectbox for categories and questions
+                        selected_category = st.selectbox(
+                            "Question Category:",
+                            options=list(question_categories.keys()),
+                            key="category_selector"
+                        )
+                        
+                        if selected_category != "Select a sample question..." and selected_category in question_categories:
+                            selected_question = st.selectbox(
+                                "Sample Question:",
+                                options=list(question_categories[selected_category].keys()),
+                                key="question_selector"
+                            )
+                            
+                            if selected_question:
+                                # Auto-fill the text area with the selected question
+                                user_message = st.text_area(
+                                    "Your message:",
+                                    value=question_categories[selected_category][selected_question],
+                                    placeholder="Type your message here...",
+                                    key="chat_input"
+                                )
+                        else:
+                            user_message = st.text_area(
+                                "Your message:",
+                                placeholder="Type your message here or select a sample question above...",
+                                key="chat_input"
+                            )
+
                         # Initialize chat history in session state if it doesn't exist
                         if "chat_history" not in st.session_state:
                             st.session_state.chat_history = []
@@ -335,18 +394,15 @@ if selected_profile == "New Analysis":
                             else:
                                 st.write(f"🧞‍♂️ {data.get('first_name', '')}: {message['content']}")
                         
-                        # Add chat input
-                        user_message = st.text_area(
-                            "Your message:",
-                            placeholder="Type your message here...",
-                            key="chat_input"
-                        )
-                        
                         if st.button("Send", key="send_button"):
                             if user_message:
                                 # Add user message to history
                                 st.session_state.chat_history.append({"role": "user", "content": user_message})
                                 
+                                # Create a placeholder for the streaming response
+                                response_placeholder = st.empty()
+                                current_response = []
+
                                 with st.spinner(f"Getting response from {data.get('first_name', '')}..."):
                                     # Generate response using personality chat agent
                                     response_stream = chat_agent.generate_response(
@@ -355,22 +411,26 @@ if selected_profile == "New Analysis":
                                         chat_history=st.session_state.chat_history
                                     )
                                     
-                                    # Collect response
-                                    full_response = []
+                                    # Stream the response
                                     for chunk in response_stream:
                                         if isinstance(chunk, dict) and "content" in chunk:
                                             content = chunk["content"]
                                             if content is not None:
-                                                full_response.append(content)
+                                                current_response.append(content)
+                                                # Update the response in real-time
+                                                response_placeholder.markdown(f"🧞‍♂️ {data.get('first_name', '')}: {''.join(current_response)}")
                                         elif isinstance(chunk, str) and chunk is not None:
-                                            full_response.append(chunk)
+                                            current_response.append(chunk)
+                                            # Update the response in real-time
+                                            response_placeholder.markdown(f"🧞‍♂️ {data.get('first_name', '')}: {''.join(current_response)}")
                                     
-                                    response = "".join(full_response)
+                                    # Get the complete response
+                                    response = "".join(current_response)
                                     
                                     # Add response to history
                                     st.session_state.chat_history.append({"role": "assistant", "content": response})
                                     
-                                    # Force a rerun to update the chat display
+                                    # Force a rerun to update the chat history
                                     st.rerun()
 
                     st.sidebar.success("✨ Analysis Complete!")
@@ -576,6 +636,65 @@ else:
     with chat_tab:
         st.info(f"💬 Have a conversation with {data.get('first_name', '')} based on their personality profile")
         
+        # Sample questions dropdown
+        question_categories = {
+            "Select a sample question...": "",
+            "Negotiation Strategy": {
+                "What concessions might appeal?": "What concessions or compromises might appeal to this personality type?",
+                "Likely walkaway point?": "What's their likely walkaway point or bottom line based on their traits?",
+                "ROI discussion approach?": "How should I frame the ROI discussion given their decision-making style?"
+            },
+            "Communication Approach": {
+                "Key resonating phrases?": "What key phrases would resonate with their communication style?",
+                "Trust building strategy?": "How can I build trust quickly with this personality type?",
+                "Communication mistakes to avoid?": "What communication style mistakes should I avoid?"
+            },
+            "Meeting & Process": {
+                "Optimal meeting format?": "What meeting format would they prefer?",
+                "Timeline for negotiations?": "What's the optimal timeline for concluding negotiations?",
+                "Pricing discussion approach?": "When and how should I discuss pricing?"
+            },
+            "Objection Handling": {
+                "Likely objections?": "What are likely objections based on their behavioral traits?",
+                "Required proof points?": "What validation or proof points would they value most?",
+                "Handling resistance?": "How do I overcome resistance while maintaining rapport?"
+            },
+            "Closing Strategy": {
+                "Best closing approach?": "What closing approach would be most effective?",
+                "Ready to move signs?": "How do I know when they're ready to move forward?",
+                "Follow-up strategy?": "What follow-up cadence would work best?"
+            }
+        }
+        
+        # Two-level selectbox for categories and questions
+        selected_category = st.selectbox(
+            "Question Category:",
+            options=list(question_categories.keys()),
+            key="category_selector"
+        )
+        
+        if selected_category != "Select a sample question..." and selected_category in question_categories:
+            selected_question = st.selectbox(
+                "Sample Question:",
+                options=list(question_categories[selected_category].keys()),
+                key="question_selector"
+            )
+            
+            if selected_question:
+                # Auto-fill the text area with the selected question
+                user_message = st.text_area(
+                    "Your message:",
+                    value=question_categories[selected_category][selected_question],
+                    placeholder="Type your message here...",
+                    key="chat_input"
+                )
+        else:
+            user_message = st.text_area(
+                "Your message:",
+                placeholder="Type your message here or select a sample question above...",
+                key="chat_input"
+            )
+
         # Initialize chat history in session state if it doesn't exist
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
@@ -587,18 +706,15 @@ else:
             else:
                 st.write(f"🧞‍♂️ {data.get('first_name', '')}: {message['content']}")
         
-        # Add chat input
-        user_message = st.text_area(
-            "Your message:",
-            placeholder="Type your message here...",
-            key="chat_input"
-        )
-        
         if st.button("Send", key="send_button"):
             if user_message:
                 # Add user message to history
                 st.session_state.chat_history.append({"role": "user", "content": user_message})
                 
+                # Create a placeholder for the streaming response
+                response_placeholder = st.empty()
+                current_response = []
+
                 with st.spinner(f"Getting response from {data.get('first_name', '')}..."):
                     # Generate response using personality chat agent
                     response_stream = chat_agent.generate_response(
@@ -607,20 +723,24 @@ else:
                         chat_history=st.session_state.chat_history
                     )
                     
-                    # Collect response
-                    full_response = []
+                    # Stream the response
                     for chunk in response_stream:
                         if isinstance(chunk, dict) and "content" in chunk:
                             content = chunk["content"]
                             if content is not None:
-                                full_response.append(content)
+                                current_response.append(content)
+                                # Update the response in real-time
+                                response_placeholder.markdown(f"🧞‍♂️ {data.get('first_name', '')}: {''.join(current_response)}")
                         elif isinstance(chunk, str) and chunk is not None:
-                            full_response.append(chunk)
+                            current_response.append(chunk)
+                            # Update the response in real-time
+                            response_placeholder.markdown(f"🧞‍♂️ {data.get('first_name', '')}: {''.join(current_response)}")
                     
-                    response = "".join(full_response)
+                    # Get the complete response
+                    response = "".join(current_response)
                     
                     # Add response to history
                     st.session_state.chat_history.append({"role": "assistant", "content": response})
                     
-                    # Force a rerun to update the chat display
+                    # Force a rerun to update the chat history
                     st.rerun()
