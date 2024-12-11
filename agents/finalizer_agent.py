@@ -8,7 +8,8 @@ class FinalizerAgent:
     def __init__(self, client: Swarm):
         self.agent = Agent(
             name="Requirement Finalizer",
-            instructions=self.INSTRUCTIONS
+            instructions=self.INSTRUCTIONS,
+            model="gpt-4o-mini"
         )
         self.client = client
 
@@ -53,7 +54,6 @@ class FinalizerAgent:
         return self.client.run(
             agent=self.agent,
             messages=[{"role": "user", "content": final_prompt}],
-            model="gpt-4o-mini",
             stream=True
         )
 

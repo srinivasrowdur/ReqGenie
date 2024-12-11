@@ -103,6 +103,7 @@ class DiagramAgent:
         Group related services in logical clusters.
 
         RESPOND ONLY WITH VALID JSON that defines the architecture diagram.
+        DO NOT include any explanatory text or descriptions - only the JSON structure.
         """
 
         # Collect the complete response using streaming
