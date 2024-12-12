@@ -469,12 +469,40 @@ def display_profile_content(data: dict, section: str):
 def display_profile_sidebar(data: dict):
     """Common function to display profile sidebar"""
     with st.sidebar:
-        st.markdown('<div class="sidebar-profile">', unsafe_allow_html=True)
-        # Profile photo
+        # Add essential CSS only
+        st.markdown("""
+        <style>
+            /* Clean sidebar styling */
+            .stRadio > label {
+                background: white;
+                padding: 12px;
+                border-radius: 8px;
+                margin: 4px 0;
+                border: 1px solid #e0e0e0;
+                transition: all 0.2s ease;
+            }
+            .stRadio > label:hover {
+                background: #f0f7ff;
+                border-color: #0366d6;
+            }
+            .stRadio > label[data-checked="true"] {
+                background: #0366d6;
+                color: white;
+                border-color: #0366d6;
+            }
+            /* Remove extra spacing */
+            .block-container {
+                padding-top: 0;
+                padding-bottom: 1rem;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Profile Information
         if data.get("photo_url"):
             st.image(data["photo_url"], width=200)
         
-        # Name and type
+        # Name and Type
         st.markdown(f"### {data.get('first_name', '')} {data.get('last_name', '')}")
         if data.get("personalities"):
             pers = data["personalities"]
@@ -484,54 +512,13 @@ def display_profile_sidebar(data: dict):
         # DISC wheel
         if data.get("images", {}).get("disc_map"):
             st.image(data["images"]["disc_map"], width=200)
-        st.markdown('</div>', unsafe_allow_html=True)
         
         st.divider()
         
-        # Navigation with enhanced styling
-        st.markdown("""
-            <div class="sidebar-nav">
-                <h3>🎯 Engagement Insights</h3>
-            </div>
-        """, unsafe_allow_html=True)
+        # Navigation Section
+        st.markdown("### 🎯 Engagement Insights")
         
-        # Add custom CSS for radio buttons
-        st.markdown("""
-        <style>
-            /* Custom radio button styling */
-            .stRadio > label {
-                background: white;
-                padding: 15px;
-                border-radius: 10px;
-                margin: 5px 0;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                border: 1px solid #e0e0e0;
-            }
-            .stRadio > label:hover {
-                background: #f0f7ff;
-                border-color: #0366d6;
-            }
-            .stRadio > div[role="radiogroup"] > div {
-                margin: 0.5rem 0;
-            }
-            /* Icons for each section */
-            .section-icon {
-                display: inline-block;
-                width: 24px;
-                margin-right: 8px;
-                text-align: center;
-            }
-            /* Selected state */
-            .stRadio > label[data-checked="true"] {
-                background: #0366d6;
-                color: white;
-                border-color: #0366d6;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        # Updated section names with icons
+        # Section options with clear naming
         section_options = {
             "🧠 Personality DNA": "Behavioral Traits",
             "💡 Communication Blueprint": "Communication Style",
@@ -549,17 +536,16 @@ def display_profile_sidebar(data: dict):
             "📞 Follow-up Guide": "Following Up"
         }
         
+        # Radio button for section selection
         section = st.radio(
-            "",
+            label="Profile Sections",
             options=list(section_options.keys()),
             key="section_selector",
-            format_func=lambda x: x  # Keep the icons in display
+            format_func=lambda x: x,
+            label_visibility="collapsed"
         )
         
-        # Convert display name back to internal name
-        selected_section = section_options[section]
-        
-        return selected_section
+        return section_options[section]
 
 # Main content area - for new analysis
 if selected_profile == "New Analysis":
