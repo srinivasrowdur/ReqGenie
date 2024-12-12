@@ -366,41 +366,167 @@ def display_profile_content(data: dict, section: str):
                 'Value': list(traits.values())
             })
             
-            # Create bar chart
-            chart = alt.Chart(chart_data).mark_bar().encode(
-                x=alt.X('Value:Q', scale=alt.Scale(domain=[0, 100])),
-                y=alt.Y('Trait:N', sort='-x'),
-                color=alt.Color('Value:Q', scale=alt.Scale(scheme='blues')),
-                tooltip=['Trait', 'Value']
+            # Base chart configuration
+            base = alt.Chart(chart_data).encode(
+                x=alt.X('Value:Q', 
+                    scale=alt.Scale(domain=[0, 100]),
+                    axis=alt.Axis(grid=False)
+                ),
+                y=alt.Y('Trait:N', 
+                    sort='-x',
+                    axis=alt.Axis(grid=False)
+                )
             ).properties(
                 height=400
-            ).configure_axis(
-                labelFontSize=12,
-                titleFontSize=14
             )
             
+            # Bar layer
+            bars = base.mark_bar().encode(
+                color=alt.value('#1a73e8')  # Google Blue
+            )
+            
+            # Text layer with percentage format
+            text = base.mark_text(
+                align='left',
+                baseline='middle',
+                dx=5,  # Offset from end of bar
+                fontSize=14,
+                font='Roboto',
+                color='#5f6368'
+            ).encode(
+                text=alt.Text('Value:Q', format='.0f') # Remove suffix, add % in the string
+            ).transform_calculate(
+                text="datum.Value + '%'"  # Add percentage sign this way
+            )
+            
+            # Combine layers and configure
+            chart = alt.layer(bars, text).properties(
+                padding={'left': 30, 'right': 30, 'top': 20, 'bottom': 20}
+            ).configure_view(
+                strokeWidth=0
+            ).configure_axis(
+                labelFontSize=14,
+                titleFontSize=16,
+                labelFont='Roboto',
+                labelColor='#5f6368',
+                domainWidth=0.5,
+                domainColor='#e0e0e0'
+            )
+            
+            # Display chart
             st.altair_chart(chart, use_container_width=True)
+            
+            # Add Material Design styling
+            st.markdown("""
+            <style>
+                /* Material Design Typography */
+                h2 {
+                    font-family: 'Google Sans', 'Roboto', sans-serif;
+                    font-size: 24px;
+                    font-weight: 500;
+                    color: #202124;
+                    margin-bottom: 24px;
+                }
+                
+                /* Material Design Cards */
+                .trait-card {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 24px;
+                    margin: 16px 0;
+                    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 
+                               0 1px 3px 1px rgba(60,64,67,0.15);
+                }
+            </style>
+            """, unsafe_allow_html=True)
     
     elif section == "Communication Style":
         st.markdown("## Communication Style")
-        col1, col2 = st.columns(2)
         
+        # Material Design card style
+        st.markdown("""
+        <style>
+        .communication-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 8px 0;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+        }
+        .do-item {
+            color: #1e8e3e;  /* Google Green */
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .dont-item {
+            color: #d93025;  /* Google Red */
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .item-icon {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
         with col1:
+            st.markdown('<div class="communication-card">', unsafe_allow_html=True)
             st.markdown("### Do's")
             for do in data['content']['recommendations']['do']:
-                st.markdown(f'<div class="list-item">✓ {do}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="do-item"><span class="item-icon">✓</span>{do}</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
+            st.markdown('<div class="communication-card">', unsafe_allow_html=True)
             st.markdown("### Don'ts")
             for dont in data['content']['recommendations']['dont']:
-                st.markdown(f'<div class="list-item">❌ {dont}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="dont-item"><span class="item-icon">✕</span>{dont}</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
     
     elif section == "Strategic Tips":
         st.markdown("## Strategic Tips")
+        
+        # Material Design card style for tips
+        st.markdown("""
+        <style>
+        .strategy-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            display: flex;
+            align-items: flex-start;
+        }
+        .tip-number {
+            background: #1a73e8;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+            font-family: 'Google Sans', sans-serif;
+        }
+        .tip-content {
+            color: #3c4043;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         tips = data['content'].get('profile', {}).get('overview', [])
         for idx, tip in enumerate(tips, 1):
             st.markdown(f"""
-                <div class="tip-card">
+                <div class="strategy-card">
                     <div class="tip-number">{idx}</div>
                     <div class="tip-content">{tip}</div>
                 </div>
@@ -408,25 +534,136 @@ def display_profile_content(data: dict, section: str):
     
     elif section == "Meeting Approach":
         st.markdown("## Meeting Approach")
+        
+        # Material Design timeline style
+        st.markdown("""
+        <style>
+        .timeline-item {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            display: flex;
+            align-items: center;
+            border-left: 4px solid #1a73e8;
+        }
+        .timeline-marker {
+            color: #1a73e8;
+            font-size: 20px;
+            margin-right: 16px;
+            min-width: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .timeline-content {
+            color: #3c4043;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         points = get_phrases('meeting')
-        display_cards(points, "timeline-item", "→", "timeline-marker")
+        for point in points:
+            st.markdown(f"""
+                <div class="timeline-item">
+                    <div class="timeline-marker">→</div>
+                    <div class="timeline-content">{point}</div>
+                </div>
+            """, unsafe_allow_html=True)
     
     elif section == "Negotiation Style":
         st.markdown("## Negotiation Style")
+        
+        # Material Design negotiation cards
+        st.markdown("""
+        <style>
+        .nego-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 12px 0;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            border-left: 4px solid #fbbc04;  /* Google Yellow */
+        }
+        .nego-content {
+            color: #3c4043;
+            font-size: 16px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+        }
+        .nego-icon {
+            color: #fbbc04;
+            margin-right: 16px;
+            font-size: 20px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         points = get_phrases('negotiating')
         cols = st.columns(2)
         for idx, point in enumerate(points):
             with cols[idx % 2]:
                 st.markdown(f"""
                     <div class="nego-card">
-                        <div class="nego-content">{point}</div>
+                        <div class="nego-content">
+                            <span class="nego-icon">💡</span>
+                            {point}
+                        </div>
                     </div>
                 """, unsafe_allow_html=True)
     
     elif section == "Content Strategy":
         st.markdown("## Content Strategy")
+        
+        # Material Design strategy cards
+        st.markdown("""
+        <style>
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 12px 0;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            border-left: 4px solid #34a853;  /* Google Green */
+        }
+        .content-wrapper {
+            display: flex;
+            align-items: flex-start;
+        }
+        .content-icon {
+            background: #34a853;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        .content-text {
+            color: #3c4043;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         points = get_phrases('communication')
-        display_cards(points, "strategy-card", "📋", "strategy-icon")
+        for point in points:
+            st.markdown(f"""
+                <div class="content-card">
+                    <div class="content-wrapper">
+                        <div class="content-icon">📋</div>
+                        <div class="content-text">{point}</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
     
     # Additional sections using the helper functions
     elif section == "Sales Approach":
@@ -465,6 +702,62 @@ def display_profile_content(data: dict, section: str):
         if not points:
             points = get_phrases('first_impressions')
         display_cards(points, "impression-card", "👋", "impression-icon")
+    
+    elif section == "Driving Action":
+        st.markdown("## Action Drivers")
+        
+        # Material Design action cards
+        st.markdown("""
+        <style>
+        .action-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 12px 0;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            border-left: 4px solid #ea4335;  /* Google Red */
+        }
+        .action-content {
+            display: flex;
+            align-items: flex-start;
+            color: #3c4043;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .action-icon {
+            background: #ea4335;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Try different possible keys for action drivers
+        points = get_phrases('driving_action')
+        if not points:
+            points = get_phrases('action_drivers')
+        if not points:
+            points = get_phrases('actions')
+            
+        if points:
+            for point in points:
+                st.markdown(f"""
+                    <div class="action-card">
+                        <div class="action-content">
+                            <div class="action-icon">⚡</div>
+                            <div>{point}</div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("No action drivers data available for this profile.")
 
 def display_profile_sidebar(data: dict):
     """Common function to display profile sidebar"""
