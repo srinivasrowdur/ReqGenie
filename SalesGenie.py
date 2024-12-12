@@ -762,83 +762,139 @@ def display_profile_content(data: dict, section: str):
 def display_profile_sidebar(data: dict):
     """Common function to display profile sidebar"""
     with st.sidebar:
-        # Add essential CSS only
+        # Add Material Design styling
         st.markdown("""
-        <style>
-            /* Clean sidebar styling */
-            .stRadio > label {
+            <style>
+            /* Material Design Typography */
+            .sidebar-header {
+                font-family: 'Google Sans', 'Roboto', sans-serif;
+                font-size: 20px;
+                font-weight: 500;
+                color: #202124;
+                margin: 16px 0;
+            }
+            
+            /* Profile Info Card */
+            .profile-card {
                 background: white;
-                padding: 12px;
                 border-radius: 8px;
+                padding: 16px;
+                margin: 16px 0;
+                box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            }
+            
+            .profile-name {
+                font-family: 'Google Sans', 'Roboto', sans-serif;
+                font-size: 18px;
+                font-weight: 500;
+                color: #202124;
+                margin: 8px 0;
+            }
+            
+            .profile-type {
+                font-family: 'Roboto', sans-serif;
+                font-size: 14px;
+                color: #5f6368;
                 margin: 4px 0;
-                border: 1px solid #e0e0e0;
-                transition: all 0.2s ease;
             }
-            .stRadio > label:hover {
-                background: #f0f7ff;
-                border-color: #0366d6;
+
+            /* Enhanced Section Labels */
+            .section-label {
+                font-family: 'Roboto', sans-serif;
+                font-size: 14px;
+                color: #3c4043;
+                padding: 12px 16px;
+                margin: 2px 0;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.15s ease-in-out;
+                border-left: 3px solid transparent;
+                display: block;
+                text-decoration: none;
             }
-            .stRadio > label[data-checked="true"] {
-                background: #0366d6;
-                color: white;
-                border-color: #0366d6;
+            
+            .section-label:hover {
+                background: #f3f4f6;
+                border-left-color: #1a73e8;
+                color: #1a73e8;
+                transform: translateX(2px);
             }
-            /* Remove extra spacing */
-            .block-container {
-                padding-top: 0;
-                padding-bottom: 1rem;
+            
+            .section-label.selected {
+                background: #e8f0fe;
+                color: #1a73e8;
+                font-weight: 500;
+                border-left-color: #1a73e8;
             }
-        </style>
+
+            /* Click effect */
+            .section-label:active {
+                background: #d2e3fc;
+                transform: translateX(3px);
+            }
+            </style>
         """, unsafe_allow_html=True)
 
-        # Profile Information
+        # Profile Information in Material Card
+        st.markdown('<div class="profile-card">', unsafe_allow_html=True)
         if data.get("photo_url"):
             st.image(data["photo_url"], width=200)
         
-        # Name and Type
-        st.markdown(f"### {data.get('first_name', '')} {data.get('last_name', '')}")
+        st.markdown(f"""
+            <div class="profile-name">{data.get('first_name', '')} {data.get('last_name', '')}</div>
+        """, unsafe_allow_html=True)
+        
         if data.get("personalities"):
             pers = data["personalities"]
-            st.markdown(f"**Type:** {pers.get('disc_type', 'N/A')}")
-            st.markdown(f"**Archetype:** {pers.get('archetype', 'N/A')}")
+            st.markdown(f"""
+                <div class="profile-type">Type: {pers.get('disc_type', 'N/A')}</div>
+                <div class="profile-type">Archetype: {pers.get('archetype', 'N/A')}</div>
+            """, unsafe_allow_html=True)
         
-        # DISC wheel
         if data.get("images", {}).get("disc_map"):
             st.image(data["images"]["disc_map"], width=200)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.divider()
+        st.markdown('<div class="sidebar-header">Profile Sections</div>', unsafe_allow_html=True)
         
-        # Navigation Section
-        st.markdown("### 🎯 Engagement Insights")
+        # Initialize session state for selected section if not exists
+        if 'selected_section' not in st.session_state:
+            st.session_state.selected_section = "Behavioral Traits"
         
-        # Section options with clear naming
-        section_options = {
-            "🧠 Personality DNA": "Behavioral Traits",
-            "💡 Communication Blueprint": "Communication Style",
-            "🎯 Success Strategies": "Strategic Tips",
-            "🤝 Meeting Mastery": "Meeting Approach",
-            "💰 Deal Dynamics": "Negotiation Style",
-            "📊 Engagement Roadmap": "Content Strategy",
-            "💼 Sales Playbook": "Sales Approach",
-            "🎯 Product Demo": "Product Demo",
-            "💰 Pricing Talk": "Pricing",
-            "🤝 Trust Building": "Building Trust",
-            "⚡ Action Drivers": "Driving Action",
-            "👥 Working Style": "Working Together",
-            "📝 First Impressions": "First Impressions",
-            "📞 Follow-up Guide": "Following Up"
-        }
+        # Simple list of sections with defined order
+        sections = [
+            "Behavioral Traits",  # First section by default
+            "Communication Style",
+            "Strategic Tips",
+            "Meeting Approach",
+            "Negotiation Style",
+            "Content Strategy",
+            "Sales Approach",
+            "Product Demo",
+            "Pricing",
+            "Building Trust",
+            "Driving Action",
+            "Working Together",
+            "First Impressions",
+            "Following Up"
+        ]
+
+        # Create clickable labels with enhanced styling
+        selected_section = st.session_state.selected_section
         
-        # Radio button for section selection
-        section = st.radio(
-            label="Profile Sections",
-            options=list(section_options.keys()),
-            key="section_selector",
-            format_func=lambda x: x,
-            label_visibility="collapsed"
-        )
-        
-        return section_options[section]
+        for section in sections:
+            is_selected = section == selected_section
+            # Use a button with custom styling instead of markdown
+            if st.button(
+                section,
+                key=f"btn_{section}",
+                use_container_width=True,
+                type="secondary" if not is_selected else "primary"
+            ):
+                st.session_state.selected_section = section
+                st.rerun()
+
+        return st.session_state.selected_section
 
 # Main content area - for new analysis
 if selected_profile == "New Analysis":
