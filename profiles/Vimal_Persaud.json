@@ -1,0 +1,200 @@
+{
+  "data": {
+    "id": "59043ed9-382f-412d-8bc2-ff15dc071a36",
+    "url": "https://www.crystalknows.com/p/59043ed9-382f-412d-8bc2-ff15dc071a36",
+    "content": {
+      "profile": {
+        "overview": [
+          "Vimal tends to be pragmatic, reliable, and very organized.",
+          "Vimal is likely a natural problem-solver: perceptive, analytical, and detail-oriented.",
+          "Vimal is likely a natural planner that only feels comfortable with all of the available information.",
+          "Vimal tends to make decisions based on logic and feels comfortable knowing all of the details.",
+          "Vimal tends to be pragmatic, reliable and accurate."
+        ]
+      },
+      "behavior": {
+        "phrase": [
+          "Communicating an important concern primarily in writing",
+          "Reading an instruction manual",
+          "Articulating a clear plan of action before a big decision",
+          "Preferring to improve an existing document rather than write a new one"
+        ]
+      },
+      "drainer": {
+        "phrase": [
+          "Frequent collaboration with others",
+          "Acting on gut instinct",
+          "Attending crowded events",
+          "Lack of predictability"
+        ]
+      },
+      "strengths": {
+        "phrase": [
+          "Relying on trusted solutions",
+          "Remaining objective, even in emotional situations",
+          "Carefully considering decisions perceived as high-risk",
+          "Showing precision in their work"
+        ]
+      },
+      "blindspots": {
+        "phrase": [
+          "Focusing too closely on the details",
+          "May take a long time to come to a conclusion",
+          "May overcomplicate solutions to simple problems",
+          "May place unattainable expectations on themselves or others"
+        ]
+      },
+      "building_trust": {
+        "phrase": [
+          "Be prepared to answer questions",
+          "Avoid sarcasm",
+          "Remain stoic and objective",
+          "Respect their time by staying focused on the point"
+        ]
+      },
+      "driving_action": {
+        "phrase": [
+          "Tell them what they should prepare beforehand",
+          "Say specifically which topics will be covered",
+          "Explain what the meeting will help them learn",
+          "Give them a few time options to select from"
+        ]
+      },
+      "following_up": {
+        "phrase": [
+          "Ask them to outline deadlines and next steps",
+          "Ask about the decision-making process",
+          "Ask a specific question, without pushing for a decision",
+          "Ask for details about the current process"
+        ]
+      },
+      "negotiating": {
+        "phrase": [
+          "Avoid bringing in personal stories",
+          "Give them plenty of time to think through a decision",
+          "Maintain a cool, reserved demeanor",
+          "Clearly communicate your expectations for negotiation"
+        ]
+      },
+      "pricing": {
+        "phrase": [
+          "Ask if they need any further information",
+          "Provide formulas, calculators, or visuals if possible",
+          "Outline all the extra details like terms and conditions",
+          "Give them time to analyze the details on their own"
+        ]
+      },
+      "product_demo": {
+        "phrase": [
+          "Share a written agenda of what you'll talk about at the start",
+          "Send detailed follow ups",
+          "Move at a thorough, methodical pace",
+          "Avoid going over your allotted time"
+        ]
+      },
+      "meeting": {
+        "phrase": [
+          "Discuss realistic solutions",
+          "Give them time to process after the meeting",
+          "Examine the data before making decisions",
+          "Try to keep the meeting one-on-one"
+        ]
+      },
+      "motivation": {
+        "phrase": [
+          "Structure",
+          "Opportunities to demonstrate expertise",
+          "Rules and processes",
+          "Working alone"
+        ]
+      },
+      "communication": {
+        "phrase": [
+          "Be prepared to answer questions",
+          "Avoid sarcasm",
+          "Remain stoic and objective",
+          "Respect their time by staying focused on the point"
+        ]
+      },
+      "selling": {
+        "phrase": [
+          "Expect the conversation to be lengthy",
+          "Offer a wide variety of options",
+          "Follow up with additional data to help them decide",
+          "Provide plenty of data"
+        ]
+      },
+      "working_together": {
+        "phrase": [
+          "Verbally recognize their expertise",
+          "Present the pros and cons of your ideas",
+          "Give them time to work on their own",
+          "Compliment quality of their work"
+        ]
+      },
+      "first_impressions": {
+        "phrase": [
+          "Expect the conversation to be lengthy",
+          "Offer a wide variety of options",
+          "Follow up with additional data to help them decide",
+          "Provide plenty of data"
+        ]
+      },
+      "recommendations": {
+        "do": [
+          "Send additional data like case studies, one-pagers, and other documentation",
+          "Place a high value on the product's details, even if it takes longer than expected",
+          "Address the meat of their concerns, even if it means diving into strenuous detail"
+        ],
+        "dont": [
+          "Don't skip important details about the product or the buying process",
+          "Don't bypass or skip over any of his feedback, questions, and concerns",
+          "Don't use overly-emotional language"
+        ]
+      }
+    },
+    "verified": false,
+    "photo_url": "https://media.licdn.com/dms/image/v2/C4D03AQFBRwZqMXcTcw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1516933802880?e=2147483647&v=beta&t=gpE7h5GKaJLEFe89M-DvtVwCPA1sYjf5-KnIvV7ePEY",
+    "first_name": "Vimal",
+    "last_name": "Persaud",
+    "images": {
+      "disc_map": "https://api.crystalknows.com/images/disc_map/12.png"
+    },
+    "qualities": [
+      "Meticulous",
+      "Calm",
+      "Purposeful"
+    ],
+    "personalities": {
+      "disc_degrees": {
+        "c": 75,
+        "i": 0,
+        "s": 25,
+        "d": 0
+      },
+      "disc_intensity": 30,
+      "disc_type": "Cs",
+      "behavioral_traits": {
+        "Dominance": 47,
+        "Expressiveness": 36,
+        "Leniency": 56,
+        "Pace": 37,
+        "Pragmatism": 64,
+        "Risk-Aversion": 63,
+        "Skepticism": 58,
+        "Social": 45
+      },
+      "archetype": "Editor",
+      "overview": "Vimal tends to be pragmatic, reliable, and very organized.",
+      "disc_degrees_number": 243,
+      "disc_percentages": {
+        "c": 75,
+        "i": 0,
+        "s": 25,
+        "d": 0
+      },
+      "enneagram_type": null,
+      "myers_briggs_type": "INTP"
+    }
+  }
+}

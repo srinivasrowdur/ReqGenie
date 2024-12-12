@@ -8,3 +8,5 @@ typing
 diagrams
 graphviz
 git+https://github.com/openai/swarm.git
+pandas
+altair
