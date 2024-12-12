@@ -218,6 +218,91 @@ st.markdown("""
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    /* Sales card styling */
+    .sales-card, .demo-card, .pricing-card, .trust-card {
+        background: white;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+    }
+    .sales-icon, .demo-icon, .pricing-icon, .trust-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        min-width: 2rem;
+        text-align: center;
+    }
+    /* Add different background colors for different card types */
+    .sales-card { border-left: 4px solid #0366d6; }
+    .demo-card { border-left: 4px solid #2ea44f; }
+    .pricing-card { border-left: 4px solid #d73a49; }
+    .trust-card { border-left: 4px solid #6f42c1; }
+    /* Additional card styles */
+    .action-card, .collab-card, .followup-card {
+        background: white;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+    }
+    .action-icon, .collab-icon, .followup-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        min-width: 2rem;
+        text-align: center;
+    }
+    /* Unique border colors for each type */
+    .action-card { border-left: 4px solid #ff9800; }
+    .collab-card { border-left: 4px solid #4caf50; }
+    .followup-card { border-left: 4px solid #9c27b0; }
+    /* Enhanced sidebar styling */
+    .sidebar-profile {
+        background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .sidebar-nav {
+        margin-top: 2rem;
+    }
+    .sidebar-nav h3 {
+        color: #1a1f36;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        padding-left: 0.5rem;
+    }
+    /* Section header styling */
+    .section-header {
+        background: linear-gradient(90deg, #0366d6 0%, #0378d6 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(3, 102, 214, 0.2);
+    }
+    .impression-card {
+        background: white;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        border-left: 4px solid #00bcd4;
+    }
+    .impression-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        min-width: 2rem;
+        text-align: center;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -251,6 +336,25 @@ with st.sidebar:
 
 def display_profile_content(data: dict, section: str):
     """Common function to display profile content based on selected section"""
+    content = data.get('content', {})
+    
+    # Helper function to safely get phrases
+    def get_phrases(key):
+        return content.get(key, {}).get('phrase', [])
+    
+    # Helper function to display cards
+    def display_cards(points, card_class, icon, icon_class):
+        if points:
+            for point in points:
+                st.markdown(f"""
+                    <div class="{card_class}">
+                        <div class="{icon_class}">{icon}</div>
+                        <div class="{card_class}-content">{point}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info(f"No data available for this section")
+
     if section == "Behavioral Traits":
         st.markdown("## Behavioral Traits")
         if data.get("personalities", {}).get("behavioral_traits"):
@@ -304,18 +408,12 @@ def display_profile_content(data: dict, section: str):
     
     elif section == "Meeting Approach":
         st.markdown("## Meeting Approach")
-        meeting_points = data['content']['meeting']['phrase']
-        for idx, point in enumerate(meeting_points):
-            st.markdown(f"""
-                <div class="timeline-item">
-                    <div class="timeline-marker">→</div>
-                    <div class="timeline-content">{point}</div>
-                </div>
-            """, unsafe_allow_html=True)
+        points = get_phrases('meeting')
+        display_cards(points, "timeline-item", "→", "timeline-marker")
     
     elif section == "Negotiation Style":
         st.markdown("## Negotiation Style")
-        points = data['content']['negotiating']['phrase']
+        points = get_phrases('negotiating')
         cols = st.columns(2)
         for idx, point in enumerate(points):
             with cols[idx % 2]:
@@ -327,16 +425,46 @@ def display_profile_content(data: dict, section: str):
     
     elif section == "Content Strategy":
         st.markdown("## Content Strategy")
-        strategy_points = data['content']['communication']['phrase']
-        for point in strategy_points:
-            st.markdown(f"""
-                <div class="strategy-card">
-                    <div class="strategy-content">
-                        <div class="strategy-icon">📋</div>
-                        <div class="strategy-text">{point}</div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+        points = get_phrases('communication')
+        display_cards(points, "strategy-card", "📋", "strategy-icon")
+    
+    # Additional sections using the helper functions
+    elif section == "Sales Approach":
+        st.markdown("## Sales Playbook")
+        points = get_phrases('selling')
+        display_cards(points, "sales-card", "💼", "sales-icon")
+    
+    elif section == "Product Demo":
+        st.markdown("## Product Presentation Guide")
+        points = get_phrases('product_demo')
+        display_cards(points, "demo-card", "🎯", "demo-icon")
+    
+    elif section == "Pricing":
+        st.markdown("## Pricing Strategy")
+        points = get_phrases('pricing')
+        display_cards(points, "pricing-card", "💰", "pricing-icon")
+    
+    elif section == "Building Trust":
+        st.markdown("## Trust Building Approach")
+        points = get_phrases('building_trust')
+        display_cards(points, "trust-card", "🤝", "trust-icon")
+    
+    elif section == "Working Together":
+        st.markdown("## Working Style")
+        points = get_phrases('working_together')
+        display_cards(points, "collab-card", "👥", "collab-icon")
+    
+    elif section == "Following Up":
+        st.markdown("## Follow-up Strategy")
+        points = get_phrases('following_up')
+        display_cards(points, "followup-card", "📞", "followup-icon")
+    
+    elif section == "First Impressions":
+        st.markdown("## First Impressions")
+        points = get_phrases('first_impression')
+        if not points:
+            points = get_phrases('first_impressions')
+        display_cards(points, "impression-card", "👋", "impression-icon")
 
 def display_profile_sidebar(data: dict):
     """Common function to display profile sidebar"""
@@ -360,24 +488,78 @@ def display_profile_sidebar(data: dict):
         
         st.divider()
         
-        # Navigation
-        st.markdown('<div class="sidebar-nav">', unsafe_allow_html=True)
-        st.markdown("### Sections")
+        # Navigation with enhanced styling
+        st.markdown("""
+            <div class="sidebar-nav">
+                <h3>🎯 Engagement Insights</h3>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Add custom CSS for radio buttons
+        st.markdown("""
+        <style>
+            /* Custom radio button styling */
+            .stRadio > label {
+                background: white;
+                padding: 15px;
+                border-radius: 10px;
+                margin: 5px 0;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 1px solid #e0e0e0;
+            }
+            .stRadio > label:hover {
+                background: #f0f7ff;
+                border-color: #0366d6;
+            }
+            .stRadio > div[role="radiogroup"] > div {
+                margin: 0.5rem 0;
+            }
+            /* Icons for each section */
+            .section-icon {
+                display: inline-block;
+                width: 24px;
+                margin-right: 8px;
+                text-align: center;
+            }
+            /* Selected state */
+            .stRadio > label[data-checked="true"] {
+                background: #0366d6;
+                color: white;
+                border-color: #0366d6;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Updated section names with icons
+        section_options = {
+            "🧠 Personality DNA": "Behavioral Traits",
+            "💡 Communication Blueprint": "Communication Style",
+            "🎯 Success Strategies": "Strategic Tips",
+            "🤝 Meeting Mastery": "Meeting Approach",
+            "💰 Deal Dynamics": "Negotiation Style",
+            "📊 Engagement Roadmap": "Content Strategy",
+            "💼 Sales Playbook": "Sales Approach",
+            "🎯 Product Demo": "Product Demo",
+            "💰 Pricing Talk": "Pricing",
+            "🤝 Trust Building": "Building Trust",
+            "⚡ Action Drivers": "Driving Action",
+            "👥 Working Style": "Working Together",
+            "📝 First Impressions": "First Impressions",
+            "📞 Follow-up Guide": "Following Up"
+        }
+        
         section = st.radio(
             "",
-            options=[
-                "Behavioral Traits",
-                "Communication Style",
-                "Strategic Tips",
-                "Meeting Approach",
-                "Negotiation Style",
-                "Content Strategy"
-            ],
-            key="section_selector"
+            options=list(section_options.keys()),
+            key="section_selector",
+            format_func=lambda x: x  # Keep the icons in display
         )
-        st.markdown('</div>', unsafe_allow_html=True)
         
-        return section
+        # Convert display name back to internal name
+        selected_section = section_options[section]
+        
+        return selected_section
 
 # Main content area - for new analysis
 if selected_profile == "New Analysis":
@@ -655,3 +837,37 @@ else:
                     
                     # Force a rerun to update the chat history
                     st.rerun()
+
+def get_available_sections(data: dict) -> dict:
+    """Get only sections that have data available"""
+    content = data.get('content', {})
+    
+    # Helper function to check if section has data
+    def has_data(key):
+        return bool(content.get(key, {}).get('phrase', []))
+    
+    all_sections = {
+        "🧠 Personality DNA": "Behavioral Traits",
+        "💡 Communication Blueprint": "Communication Style",
+        "🎯 Success Strategies": "Strategic Tips",
+        "🤝 Meeting Mastery": "Meeting Approach",
+        "💰 Deal Dynamics": "Negotiation Style",
+        "📊 Engagement Roadmap": "Content Strategy",
+        "💼 Sales Playbook": "Sales Approach",
+        "🎯 Product Demo": "Product Demo",
+        "💰 Pricing Talk": "Pricing",
+        "🤝 Trust Building": "Building Trust",
+        "⚡ Action Drivers": "Driving Action",
+        "👥 Working Style": "Working Together",
+        "📝 First Impressions": "First Impressions",
+        "📞 Follow-up Guide": "Following Up"
+    }
+    
+    # Filter sections based on data availability
+    available_sections = {}
+    for display_name, internal_name in all_sections.items():
+        section_key = internal_name.lower().replace(' ', '_')
+        if has_data(section_key) or internal_name in ["Behavioral Traits", "Communication Style"]:
+            available_sections[display_name] = internal_name
+    
+    return available_sections
