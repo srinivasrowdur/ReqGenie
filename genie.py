@@ -5,39 +5,28 @@ import tempfile
 import subprocess
 import sys
 from jira_service import JiraService
-from agents.elaborator_agent import ElaboratorAgent
-from agents.validator_agent import ValidatorAgent
-from agents.finalizer_agent import FinalizerAgent
-from agents.test_generator_agent import TestGeneratorAgent
-from agents.code_generator_agent import CodeGeneratorAgent
-from agents.code_reviewer_agent import CodeReviewerAgent
-from agents.jira_agent import JiraAgent
-from agents.diagram_agent import DiagramAgent
+
+# Add the current directory to the path to make local imports work
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from GenieAgents.requirement_processor import RequirementProcessor
 
 # Load environment variables before any other imports
 load_dotenv()
 
 import streamlit as st
-from swarm import Swarm, Agent
+# Import directly from agents package
+from agents import Agent, Runner
 from streamlit_extras.stateful_button import button
 import time
 from PyPDF2 import PdfReader
+import asyncio
+import nest_asyncio
 
-# Initialize Swarm client
-client = Swarm()
+# Apply nest_asyncio to allow nested event loops
+nest_asyncio.apply()
 
-# Initialize agents
-def create_agents(client: Swarm):
-    elaborator = ElaboratorAgent(client)
-    validator = ValidatorAgent(client)
-    finalizer = FinalizerAgent(client)
-    test_generator = TestGeneratorAgent(client)
-    code_generator = CodeGeneratorAgent(client)
-    code_reviewer = CodeReviewerAgent(client)
-    jira_creator = JiraAgent(client)
-    diagram_generator = DiagramAgent(client)
-    
-    return elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator, diagram_generator
+# Initialize the requirement processor
+processor = RequirementProcessor()
 
 # Set page config
 st.set_page_config(
@@ -163,12 +152,19 @@ def get_tab_names(has_nfrs):
         base_tabs.append("NFR Analysis")
     return base_tabs + ["Validation", "Final Specs", "Test Cases", "Code", "Review", "Architecture"]
 
+# Utility function to run async code in Streamlit
+def run_async(coro):
+    """Run an async function from synchronous Streamlit code"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
 if st.button("Analyze"):
     if requirement:
         try:
-            # Create agents with client
-            elaborator, validator, finalizer, test_generator, code_generator, code_reviewer, jira_creator, diagram_generator = create_agents(client)
-            
             # Determine if we have NFRs and create tabs accordingly
             has_nfrs = bool(nfr_content.strip())
             TAB_NAMES = get_tab_names(has_nfrs)
@@ -177,233 +173,93 @@ if st.button("Analyze"):
             # Track current tab index
             current_tab = 0
             
-            # Elaboration of functional requirements
+            # Prepare Jira configuration if needed
+            jira_config = None
+            if update_jira:
+                jira_config = {
+                    "project": jira_project,
+                    "component": jira_component
+                }
+            
+            # Run the full processing pipeline asynchronously
+            def process_requirement():
+                return run_async(processor.process(
+                    requirement=requirement,
+                    app_type=app_type,
+                    nfr_content=nfr_content if has_nfrs else None,
+                    jira_config=jira_config,
+                    language=programming_language,
+                    cloud_env=cloud_environment
+                ))
+            
+            # Start processing with a spinner
+            with st.spinner("Processing your requirement..."):
+                results = process_requirement()
+            
+            # Display results in respective tabs
+            
+            # Elaboration tab
             with tabs[current_tab]:
                 st.subheader("Elaborated Functional Requirements")
-                handle_chunk, elaboration_content = stream_content(tabs[current_tab])
-                
-                # Get the stream directly from the agent
-                elaboration_stream = elaborator.elaborate_requirements(requirement, app_type)
-                
-                # Stream the chunks for UI updates
-                for chunk in elaboration_stream:
-                    handle_chunk(chunk)
-                
-                # Store the elaboration for later use
-                elaboration = ''.join(filter(None, elaboration_content))
+                st.write(results["elaboration"])
                 st.sidebar.success("✅ Functional Requirements Analysis Complete")
             current_tab += 1
-
-            # NFR Analysis (only if NFRs are provided)
-            nfr_analysis = ""
+            
+            # NFR Analysis tab (if available)
             if has_nfrs:
                 with tabs[current_tab]:
                     st.subheader("Non-Functional Requirements Analysis")
-                    handle_chunk, nfr_analysis_content = stream_content(tabs[current_tab])
-                    
-                    # Get the stream directly from the agent
-                    nfr_stream = elaborator.analyze_nfr(nfr_content, app_type)
-                    for chunk in nfr_stream:
-                        handle_chunk(chunk)
-                    
-                    nfr_analysis = ''.join(filter(None, nfr_analysis_content))
+                    st.write(results["nfr_analysis"])
                     st.sidebar.success("✅ NFR Analysis Complete")
                 current_tab += 1
-
-            # Validation
+            
+            # Validation tab
             with tabs[current_tab]:
                 st.subheader("Validation Review")
-                handle_chunk, validation_content = stream_content(tabs[current_tab])
-                
-                # Get validation stream from the agent
-                validation_stream = validator.validate_requirements(
-                    elaboration=elaboration,
-                    nfr_analysis=nfr_analysis if has_nfrs else ""
-                )
-                
-                for chunk in validation_stream:
-                    handle_chunk(chunk)
-                validation = ''.join(filter(None, validation_content))
+                st.write(results["func_validation"])
+                if results["nfr_validation"]:
+                    st.subheader("NFR Validation")
+                    st.write(results["nfr_validation"])
                 st.sidebar.success("✅ Validation Complete")
             current_tab += 1
-
-            # Final requirements
+            
+            # Final Requirements tab
             with tabs[current_tab]:
                 st.subheader("Final Requirements")
-                handle_chunk, final_content = stream_content(tabs[current_tab])
-                
-                # Prepare NFR data if available
-                nfr_data = None
-                if has_nfrs:
-                    nfr_data = {
-                        'document': nfr_content,
-                        'analysis': nfr_analysis
-                    }
-                
-                # Get finalization stream from the agent
-                final_stream = finalizer.finalize_requirements(
-                    original_requirement=requirement,
-                    elaboration=elaboration,
-                    validation=validation,
-                    nfr_data=nfr_data
-                )
-                
-                for chunk in final_stream:
-                    handle_chunk(chunk)
-                final_requirements = ''.join(filter(None, final_content))
+                st.write(results["final_spec"])
                 st.sidebar.success("✅ Final Requirements Complete")
             current_tab += 1
-
-            # Test Cases
+            
+            # Test Cases tab
             with tabs[current_tab]:
                 st.subheader("Test Cases")
-                handle_chunk, test_content = stream_content(tabs[current_tab])
-                
-                # Get test cases stream from the agent
-                test_stream = test_generator.generate_test_cases(
-                    requirement=requirement,
-                    final_requirements=final_requirements,
-                    programming_language=programming_language,
-                    nfr_analysis=nfr_analysis if has_nfrs else ""
-                )
-                
-                for chunk in test_stream:
-                    handle_chunk(chunk)
-                test_cases = ''.join(filter(None, test_content))
+                st.write(results["tests"])
                 st.sidebar.success("✅ Test Cases Generated")
             current_tab += 1
-
-            # Code Generation
+            
+            # Code tab
             with tabs[current_tab]:
-                st.subheader("Generated Code")
-                handle_chunk, code_content = stream_content(tabs[current_tab])
-                
-                # Get code generation stream from the agent
-                code_stream = code_generator.generate_code(
-                    final_requirements=final_requirements,
-                    programming_language=programming_language,
-                    app_type=app_type,
-                    nfr_analysis=nfr_analysis if has_nfrs else None
-                )
-                
-                for chunk in code_stream:
-                    handle_chunk(chunk)
-                generated_code = ''.join(filter(None, code_content))
+                st.subheader("Sample Code")
+                st.code(results["code"])
                 st.sidebar.success("✅ Code Generated")
             current_tab += 1
-
-            # Code Review
+            
+            # Review tab
             with tabs[current_tab]:
-                st.subheader("Code Review Analysis")
-                handle_chunk, review_content = stream_content(tabs[current_tab])
-                
-                review_stream = code_reviewer.review_code(
-                    final_requirements=final_requirements,
-                    generated_code=generated_code,
-                    test_cases=test_cases,
-                    nfr_analysis=nfr_analysis if has_nfrs else ""
-                )
-                
-                for chunk in review_stream:
-                    handle_chunk(chunk)
+                st.subheader("Code Review")
+                st.write(results["review"])
                 st.sidebar.success("✅ Code Review Complete")
             current_tab += 1
-
-            # Create Jira tickets if enabled
-            if update_jira:
-                with st.spinner("Creating Jira tickets..."):
-                    try:
-                        # Get the complete review content
-                        review_text = ''.join(filter(None, review_content))
-                        
-                        # Create Jira tickets
-                        jira_stream = jira_creator.create_tickets(
-                            project_key=jira_project,
-                            component=jira_component,
-                            requirement=requirement,
-                            elaboration=elaboration,
-                            final_requirements=final_requirements,
-                            test_cases=test_cases,
-                            nfr_analysis=nfr_analysis if has_nfrs else None
-                        )
-                        
-                        # Show progress in sidebar
-                        for chunk in jira_stream:
-                            if isinstance(chunk, dict) and "content" in chunk:
-                                st.sidebar.info(chunk["content"])
-                            elif isinstance(chunk, str):
-                                st.sidebar.info(chunk)
-                        
-                        st.sidebar.success("✅ Jira Tickets Created")
-                    except Exception as e:
-                        st.sidebar.error(f"Failed to create Jira tickets: {str(e)}")
-
-            # Generate Architecture Diagram
+            
+            # Architecture tab
             with tabs[current_tab]:
                 st.subheader("Architecture Diagram")
-                handle_chunk, diagram_content = stream_content(tabs[current_tab])
-                
-                # Get diagram code stream from the agent
-                diagram_stream = diagram_generator.generate_diagram(
-                    requirement=requirement,
-                    architecture_type=app_type,
-                    platform=cloud_environment.lower(),
-                    style={"direction": "TB", "show_labels": True}
-                )
-                
-                for chunk in diagram_stream:
-                    handle_chunk(chunk)
-                
-                # Get the complete diagram code
-                diagram_code = ''.join(filter(None, diagram_content))
-                
-                # Show the diagram code in an expandable section
-                with st.expander("View Diagram Code"):
-                    st.code(diagram_code, language="python")
-                
-                try:
-                    with st.spinner("Generating diagram..."):
-                        # Create a temporary directory for diagram generation
-                        with tempfile.TemporaryDirectory() as temp_dir:
-                            # Create paths
-                            temp_py_path = os.path.join(temp_dir, "diagram.py")
-                            
-                            # Save the code
-                            with open(temp_py_path, "w") as f:
-                                f.write(diagram_code)
-                            
-                            # Execute the diagram code using subprocess
-                            process = subprocess.run(
-                                [sys.executable, temp_py_path],
-                                cwd=temp_dir,
-                                capture_output=True,
-                                text=True
-                            )
-                            
-                            if process.returncode != 0:
-                                st.error("Error executing diagram code:")
-                                st.error(process.stderr)
-                            else:
-                                # Look for the generated diagram
-                                diagram_files = [f for f in os.listdir(temp_dir) if f.endswith('.png')]
-                                if diagram_files:
-                                    diagram_path = os.path.join(temp_dir, diagram_files[0])
-                                    with open(diagram_path, "rb") as f:
-                                        st.image(f.read())
-                                else:
-                                    st.error("No diagram file generated")
-                                    st.error("Directory contents:")
-                                    st.code('\n'.join(os.listdir(temp_dir)))
-                                    st.error("Process output:")
-                                    st.code(process.stdout)
-                                
-                except Exception as e:
-                    st.error(f"Error generating diagram: {str(e)}")
-                
+                st.image(results["diagrams"])
                 st.sidebar.success("✅ Architecture Diagram Generated")
-
-            # Show completion message
-            st.sidebar.success("✨ Analysis Complete!")
+            
+            # Show Jira update info if applicable
+            if update_jira and "jira" in results:
+                st.sidebar.success(f"✅ Jira tickets created: {results['jira']}")
             
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
