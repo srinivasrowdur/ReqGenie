@@ -9,6 +9,7 @@ from jira_service import JiraService
 # Add the current directory to the path to make local imports work
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from GenieAgents.requirement_processor import RequirementProcessor
+from GenieAgents.output_formatter import OutputFormatter
 
 # Load environment variables before any other imports
 load_dotenv()
@@ -124,26 +125,39 @@ requirement = st.text_input(
     key="requirement_input"
 )
 
-def stream_content(tab_placeholder):
-    """Improved streaming function with better UI"""
-    message_placeholder = tab_placeholder.empty()
-    full_response = []
+def run_async(coroutine):
+    """Run an async function from a synchronous context"""
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(coroutine)
 
-    def handle_chunk(chunk):
-        try:
-            content = None
-            if isinstance(chunk, dict) and "content" in chunk:
-                content = chunk["content"]
-            elif isinstance(chunk, str):
-                content = chunk
-                
-            if content is not None:  # Only append and update if content exists
-                full_response.append(content)
-                message_placeholder.markdown(''.join(full_response))
-        except Exception as e:
-            st.error(f"Streaming error: {str(e)}")
-    
-    return handle_chunk, full_response
+async def stream_with_ui_updates(coroutine, placeholder, message="Processing..."):
+    """Improved streaming function with better UI"""
+    try:
+        # Create a progress bar
+        progress_bar = placeholder.progress(0)
+        
+        # Start the coroutine
+        result = await coroutine
+        
+        # Update progress to complete
+        progress_bar.progress(100)
+        placeholder.empty()  # Clear the progress bar
+        
+        # Format the result if it's structured data
+        if isinstance(result, dict) or hasattr(result, 'dict'):
+            try:
+                # Convert to dict if it's a Pydantic model
+                data = result.dict() if hasattr(result, 'dict') else result
+                return OutputFormatter.format_any_output(data)
+            except Exception as e:
+                st.warning(f"Could not format structured output: {str(e)}")
+                return result
+        return result
+        
+    except Exception as e:
+        placeholder.empty()
+        st.error(f"Streaming error: {str(e)}")
+        return f"Error: {str(e)}"
 
 # Define dynamic tab names based on NFR presence
 def get_tab_names(has_nfrs):
@@ -151,16 +165,6 @@ def get_tab_names(has_nfrs):
     if has_nfrs:
         base_tabs.append("NFR Analysis")
     return base_tabs + ["Validation", "Final Specs", "Test Cases", "Code", "Review", "Architecture"]
-
-# Utility function to run async code in Streamlit
-def run_async(coro):
-    """Run an async function from synchronous Streamlit code"""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
 
 if st.button("Analyze"):
     if requirement:
@@ -183,7 +187,7 @@ if st.button("Analyze"):
             
             # Run the full processing pipeline asynchronously
             def process_requirement():
-                return run_async(processor.process(
+                results = run_async(processor.process(
                     requirement=requirement,
                     app_type=app_type,
                     nfr_content=nfr_content if has_nfrs else None,
@@ -191,6 +195,16 @@ if st.button("Analyze"):
                     language=programming_language,
                     cloud_env=cloud_environment
                 ))
+                
+                # Format all results for better display
+                formatted_results = {}
+                for key, value in results.items():
+                    if value is not None:
+                        formatted_results[key] = OutputFormatter.format_any_output(value)
+                    else:
+                        formatted_results[key] = None
+                
+                return formatted_results
             
             # Start processing with a spinner
             with st.spinner("Processing your requirement..."):
@@ -201,7 +215,7 @@ if st.button("Analyze"):
             # Elaboration tab
             with tabs[current_tab]:
                 st.subheader("Elaborated Functional Requirements")
-                st.write(results["elaboration"])
+                st.markdown(results["elaboration"])
                 st.sidebar.success("✅ Functional Requirements Analysis Complete")
             current_tab += 1
             
@@ -209,57 +223,91 @@ if st.button("Analyze"):
             if has_nfrs:
                 with tabs[current_tab]:
                     st.subheader("Non-Functional Requirements Analysis")
-                    st.write(results["nfr_analysis"])
+                    st.markdown(results["nfr_analysis"])
                     st.sidebar.success("✅ NFR Analysis Complete")
                 current_tab += 1
             
             # Validation tab
             with tabs[current_tab]:
                 st.subheader("Validation Review")
-                st.write(results["func_validation"])
+                st.markdown(results["func_validation"])
                 if results["nfr_validation"]:
                     st.subheader("NFR Validation")
-                    st.write(results["nfr_validation"])
+                    st.markdown(results["nfr_validation"])
                 st.sidebar.success("✅ Validation Complete")
             current_tab += 1
             
             # Final Requirements tab
             with tabs[current_tab]:
                 st.subheader("Final Requirements")
-                st.write(results["final_spec"])
+                st.markdown(results["final_spec"])
                 st.sidebar.success("✅ Final Requirements Complete")
             current_tab += 1
             
             # Test Cases tab
             with tabs[current_tab]:
                 st.subheader("Test Cases")
-                st.write(results["tests"])
+                st.markdown(results["tests"])
                 st.sidebar.success("✅ Test Cases Generated")
             current_tab += 1
             
             # Code tab
             with tabs[current_tab]:
-                st.subheader("Sample Code")
-                st.code(results["code"])
+                st.subheader("Generated Code")
+                st.markdown(results["code"])
                 st.sidebar.success("✅ Code Generated")
             current_tab += 1
             
-            # Review tab
+            # Code Review tab
             with tabs[current_tab]:
                 st.subheader("Code Review")
-                st.write(results["review"])
+                st.markdown(results["review"])
                 st.sidebar.success("✅ Code Review Complete")
             current_tab += 1
             
-            # Architecture tab
+            # Diagram tab
             with tabs[current_tab]:
                 st.subheader("Architecture Diagram")
-                st.image(results["diagrams"])
+                try:
+                    # Try to display the diagram if it's available
+                    if "diagram_code" in results["diagrams"]:
+                        st.code(results["diagrams"], language="python")
+                        
+                        # Try to render the diagram if possible
+                        try:
+                            with tempfile.NamedTemporaryFile(suffix='.py') as f:
+                                f.write(results["diagrams"].encode('utf-8'))
+                                f.flush()
+                                
+                                # Try to execute the diagram code to generate an image
+                                result = subprocess.run(
+                                    [sys.executable, f.name],
+                                    capture_output=True,
+                                    text=True
+                                )
+                                
+                                if result.returncode == 0:
+                                    # If successful, display the generated image
+                                    st.image("diagram.png")
+                                else:
+                                    st.error(f"Error generating diagram: {result.stderr}")
+                        except Exception as e:
+                            st.error(f"Error rendering diagram: {str(e)}")
+                    else:
+                        st.markdown(results["diagrams"])
+                except Exception as e:
+                    st.error(f"Error with diagram: {str(e)}")
+                    
                 st.sidebar.success("✅ Architecture Diagram Generated")
+            current_tab += 1
             
-            # Show Jira update info if applicable
-            if update_jira and "jira" in results:
-                st.sidebar.success(f"✅ Jira tickets created: {results['jira']}")
+            # Jira Tickets tab (if configured)
+            if jira_config:
+                with tabs[current_tab]:
+                    st.subheader("Jira Tickets")
+                    st.markdown(results["jira"])
+                    st.sidebar.success("✅ Jira Tickets Created")
+                current_tab += 1
             
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")

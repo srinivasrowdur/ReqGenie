@@ -18,6 +18,7 @@ from .code_generator_agent import CodeGeneratorAgent
 from .code_reviewer_agent import CodeReviewerAgent
 from .jira_agent import JiraAgent
 from .diagram_agent import DiagramAgent
+from .output_formatter import OutputFormatter
 
 class RequirementProcessor:
     """
@@ -25,7 +26,7 @@ class RequirementProcessor:
     using multiple specialized agents.
     """
     
-    def __init__(self):
+    def __init__(self, use_formatted_output=True):
         """Initialize the processor with all required agents"""
         # Initialize all required agents
         self.elaborator = ElaboratorAgent()
@@ -36,6 +37,7 @@ class RequirementProcessor:
         self.code_reviewer = CodeReviewerAgent()
         self.jira_agent = JiraAgent()
         self.diagram_generator = DiagramAgent()
+        self.use_formatted_output = use_formatted_output
         
     async def process(self, 
                     requirement: str, 
@@ -131,6 +133,20 @@ class RequirementProcessor:
                         results["tests"], 
                         jira_config
                     )
+            
+            # Format results if requested
+            if self.use_formatted_output:
+                formatted_results = {}
+                for key, value in results.items():
+                    if value is not None:
+                        # Special handling for code which should remain as code
+                        if key == "code":
+                            formatted_results[key] = value
+                        else:
+                            formatted_results[key] = OutputFormatter.format_any_output(value)
+                    else:
+                        formatted_results[key] = None
+                return formatted_results
             
         # Return all results
         return results 
