@@ -226,11 +226,14 @@ try:
         
         # Debug container for logs
         debug_container = st.empty()
-
-    async def iterative_requirements_elaboration(user_prompt, app_type, output_container, 
-                                               model="o3-mini", max_iterations=3, create_use_cases=True,
-                                               create_test_cases=False, create_code=False, create_diagram=True, 
-                                               cloud_env="GCP", language="English"):
+    
+    # Define the function for requirements elaboration first
+    async def iterative_requirements_elaboration(
+        user_prompt, app_type, output_container, 
+        model="o3-mini", max_iterations=3, create_use_cases=True,
+        create_test_cases=False, create_code=False, create_diagram=True, 
+        cloud_env="GCP", language="English",
+        tab_placeholders=None):
         """Generate requirements with iterative feedback and improvement"""
         # Clear previous content
         output_container.empty()
@@ -552,24 +555,18 @@ try:
             # Clear streaming placeholders now that we're done
             output_container.empty()
             
-            if versions:
+            if versions and tab_placeholders:
                 status_area.success("✅ Requirements document process completed!")
+                requirements_placeholder, validation_placeholder, final_specs_placeholder, \
+                use_cases_placeholder, test_cases_placeholder, code_placeholder, architecture_placeholder = tab_placeholders
                 
-                # Create the main tabs like in the screenshot
-                tab_titles = ["Requirements", "Validation", "Final Specs", "Test Cases", "Code", "Review", "Architecture"]
-                if create_use_cases and use_cases_content:
-                    tab_titles.append("Use Cases")
-                
-                tabs = st.tabs(tab_titles)
-                
-                # Requirements tab - Show the final elaborated requirements
-                with tabs[0]:
-                    st.markdown("## Elaborated Functional Requirements")
-                    
-                    if final_document:
+                # Update Requirements tab
+                if final_document and requirements_placeholder:
+                    with requirements_placeholder.container():
+                        st.markdown("## Elaborated Functional Requirements")
                         st.markdown(final_document)
                         
-                        # Add download button for the final document - Keep UI text in English
+                        # Add download button for the final document
                         st.download_button(
                             label="📥 Download Requirements Document",
                             data=final_document,
@@ -578,11 +575,11 @@ try:
                             key="download_final_req"
                         )
                 
-                # Validation tab - Show the evaluation feedback
-                with tabs[1]:
-                    st.markdown("## Requirements Validation")
-                    
-                    if evaluations:
+                # Update Validation tab
+                if evaluations and validation_placeholder:
+                    with validation_placeholder.container():
+                        st.markdown("## Requirements Validation")
+                        
                         final_eval = evaluations[-1]
                         st.markdown(f"### Final Evaluation Score: {'Passed ✅' if final_eval.score == 'pass' else 'Needs Improvement ⚠️'}")
                         
@@ -600,22 +597,37 @@ try:
                                 st.markdown(f"**Score:** {'Pass ✅' if eval.score == 'pass' else 'Needs Improvement ⚠️'}")
                                 st.markdown(f"**Feedback:** {eval.feedback}")
                 
-                # Final Specs tab - show the final document in a more structured way
-                with tabs[2]:
-                    st.markdown("## Final Specifications")
-                    
-                    if final_document:
-                        # We could parse and restructure the content here for better presentation
+                # Update Final Specs tab
+                if final_document and final_specs_placeholder:
+                    with final_specs_placeholder.container():
+                        st.markdown("## Final Specifications")
                         st.markdown(final_document)
                 
-                # Test Cases tab - placeholder for now
-                with tabs[3]:
-                    st.markdown("## Test Cases")
-                    
-                    if test_cases_content:
+                # Update Use Cases tab
+                if use_cases_content and use_cases_placeholder:
+                    with use_cases_placeholder.container():
+                        st.markdown("## Use Cases")
+                        st.markdown(use_cases_content)
+                        
+                        # Add download button for use cases
+                        st.download_button(
+                            label="📥 Download Use Cases",
+                            data=use_cases_content,
+                            file_name="use_cases.md",
+                            mime="text/markdown",
+                            key="download_usecases"
+                        )
+                elif use_cases_placeholder:
+                    with use_cases_placeholder.container():
+                        st.info("Use case generation was not enabled. Enable it in the sidebar settings to generate use cases.")
+                
+                # Update Test Cases tab
+                if test_cases_content and test_cases_placeholder:
+                    with test_cases_placeholder.container():
+                        st.markdown("## Test Cases")
                         st.markdown(test_cases_content)
                         
-                        # Add download button for test cases - Keep UI text in English
+                        # Add download button for test cases
                         st.download_button(
                             label="📥 Download Test Cases",
                             data=test_cases_content,
@@ -623,17 +635,17 @@ try:
                             mime="text/markdown",
                             key="download_test_cases"
                         )
-                    else:
+                elif test_cases_placeholder:
+                    with test_cases_placeholder.container():
                         st.info("Test case generation was not enabled. Enable it in the sidebar settings to generate test cases.")
                 
-                # Code tab - placeholder for now
-                with tabs[4]:
-                    st.markdown("## Sample Code")
-                    
-                    if code_content:
+                # Update Code tab
+                if code_content and code_placeholder:
+                    with code_placeholder.container():
+                        st.markdown("## Sample Code")
                         st.markdown(code_content)
                         
-                        # Add download button for code - Keep UI text in English
+                        # Add download button for code
                         st.download_button(
                             label="📥 Download Sample Code",
                             data=code_content,
@@ -641,38 +653,16 @@ try:
                             mime="text/markdown",
                             key="download_code"
                         )
-                    else:
+                elif code_placeholder:
+                    with code_placeholder.container():
                         st.info("Code generation was not enabled. Enable it in the sidebar settings to generate sample code.")
                 
-                # Review tab - show evaluation history
-                with tabs[5]:
-                    st.markdown("## Requirements Review")
-                    
-                    if evaluations:
-                        col1, col2 = st.columns([1, 2])
+                # Update Architecture tab
+                if diagram_output and architecture_placeholder:
+                    with architecture_placeholder.container():
+                        st.markdown("## Architecture Diagram")
                         
-                        with col1:
-                            st.markdown("### Version History")
-                            for i in range(len(versions)):
-                                score = "✅ Pass" if evaluations[i].score == "pass" else "⚠️ Needs Improvement"
-                                st.markdown(f"**Version {i+1}:** {score}")
-                        
-                        with col2:
-                            st.markdown("### Final Validation")
-                            final_eval = evaluations[-1]
-                            st.markdown(f"**Score:** {'Pass ✅' if final_eval.score == 'pass' else 'Needs Improvement ⚠️'}")
-                            st.markdown(f"**Feedback:** {final_eval.feedback}")
-                            
-                            st.markdown("**Areas for Improvement:**")
-                            for area in final_eval.improvement_areas:
-                                st.markdown(f"- {area}")
-                
-                # Architecture tab - Show the generated architecture diagram
-                with tabs[6]:
-                    st.markdown("## Architecture Diagram")
-                    
-                    try:
-                        if diagram_output:
+                        try:
                             # Get attributes from DiagramOutput class
                             explanation = diagram_output.explanation
                             diagram_code = diagram_output.diagram_code
@@ -710,31 +700,15 @@ try:
                                 mime="text/plain",
                                 key="download_diagram_code"
                             )
+                        except Exception as e:
+                            st.error(f"Error displaying diagram: {str(e)}")
+                            if DEBUG:
+                                with st.expander("Error Details", expanded=False):
+                                    st.error(traceback.format_exc())
                         else:
-                            st.info("Diagram generation was not enabled or failed. Enable it in the sidebar settings to generate architecture diagrams.")
-                    except Exception as e:
-                        st.error(f"Error displaying diagram: {str(e)}")
-                        if DEBUG:
-                            with st.expander("Error Details", expanded=False):
-                                st.error(traceback.format_exc())
+                            with architecture_placeholder.container():
+                                st.info("Diagram generation was not enabled. Enable it in the sidebar settings to generate architecture diagrams.")
                 
-                # Use Cases tab - if we have use cases
-                if create_use_cases and use_cases_content and len(tab_titles) > 7:
-                    with tabs[7]:
-                        st.markdown("## Use Cases")
-                        
-                        if use_cases_content:
-                            st.markdown(use_cases_content)
-                            
-                            # Add download button for use cases - Keep UI text in English
-                            st.download_button(
-                                label="📥 Download Use Cases",
-                                data=use_cases_content,
-                                file_name="use_cases.md",
-                                mime="text/markdown",
-                                key="download_usecases_tab"
-                            )
-            
             return final_document
             
         except Exception as e:
@@ -745,28 +719,85 @@ try:
                     st.error(f"Elaboration error: {traceback.format_exc()}")
             return error_msg
 
-    # Create container for output
-    output_container = st.container()
+    # Create tabs at the top, regardless of whether we're analyzing yet
+    # They'll be hidden initially and shown when the analyze button is clicked
+    tabs_container = st.container()
+    
+    # Create container for process updates BELOW the tabs
+    process_container = st.container()
+    
+    # Show instructions if no analysis has been started
+    if not st.session_state.get("processing_requirements", False):
+        with process_container:
+            st.info("### How it works:\n\n"
+                    "1. Enter your product requirements in the text area above\n"
+                    "2. Click 'Analyze' to start the process\n"
+                    "3. The system will elaborate on your requirements through multiple iterations\n"
+                    "4. You'll get a final requirements document, use cases, and other artifacts based on your settings")
 
-    # Process when the analyze button is clicked
+    # Handle the Analyze button click
     if analyze_button:
         if not prompt:
-            st.warning("⚠️ Please enter a requirement to analyze.")
+            st.error("Please enter a requirement before analyzing.")
         else:
-            # Run the iterative elaboration process
-            _ = run_async(iterative_requirements_elaboration(
-                prompt, 
-                app_type, 
-                output_container,
-                model,
-                max_iterations,
-                generate_use_cases,
-                generate_test_cases,
-                generate_code,
-                generate_diagram,
-                cloud_env,
-                language
-            ))
+            # Set a flag in session state to track processing status
+            st.session_state["processing_requirements"] = True
+            
+            # Create tabs up front at the top of the page
+            with tabs_container:
+                tab_titles = ["Requirements", "Validation", "Final Specs", "Use Cases", "Test Cases", "Code", "Architecture"]
+                tabs = st.tabs(tab_titles)
+                
+                # Initialize content placeholders in each tab
+                requirements_placeholder = tabs[0].empty()
+                validation_placeholder = tabs[1].empty()
+                final_specs_placeholder = tabs[2].empty()
+                use_cases_placeholder = tabs[3].empty()
+                test_cases_placeholder = tabs[4].empty()
+                code_placeholder = tabs[5].empty()
+                architecture_placeholder = tabs[6].empty()
+                
+                # Display a processing message in each tab
+                for placeholder in [requirements_placeholder, validation_placeholder, final_specs_placeholder, 
+                                   use_cases_placeholder, test_cases_placeholder, code_placeholder, architecture_placeholder]:
+                    with placeholder.container():
+                        st.info("Processing... Content will appear here when ready.")
+            
+            # Processing message in process container below the tabs
+            with process_container:
+                processing_message = st.empty()
+                processing_message.info("Processing your requirements. Please wait...")
+            
+            # Run the elaboration process
+            async def process_requirements():
+                try:
+                    final_document = await iterative_requirements_elaboration(
+                        prompt, 
+                        app_type, 
+                        process_container,  # Use the process container instead of output_container
+                        model=model, 
+                        max_iterations=max_iterations,
+                        create_use_cases=generate_use_cases,
+                        create_test_cases=generate_test_cases,
+                        create_code=generate_code,
+                        create_diagram=generate_diagram,
+                        cloud_env=cloud_env,
+                        language=language,
+                        tab_placeholders=(requirements_placeholder, validation_placeholder, final_specs_placeholder,
+                                         use_cases_placeholder, test_cases_placeholder, code_placeholder, architecture_placeholder)
+                    )
+                    
+                    # Clear processing message when done
+                    processing_message.empty()
+                    
+                except Exception as e:
+                    st.error(f"Error during processing: {str(e)}")
+                    if DEBUG:
+                        with debug_container:
+                            st.error(traceback.format_exc())
+            
+            # Run the async process
+            run_async(process_requirements())
 
 except Exception as e:
     st.error(f"Critical error in application: {str(e)}")
