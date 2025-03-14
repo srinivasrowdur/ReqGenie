@@ -236,7 +236,7 @@ try:
     
     # Define the function for requirements elaboration first
     async def iterative_requirements_elaboration(
-        user_prompt, app_type, status_placeholder, 
+        user_prompt, app_type, status_area_placeholder, 
         model="o3-mini", max_iterations=3, create_use_cases=True,
         create_test_cases=False, create_code=False, create_diagram=True, 
         cloud_env="GCP", language="English",
@@ -247,7 +247,7 @@ try:
         use_cases_placeholder, test_cases_placeholder, code_placeholder, architecture_placeholder = tab_placeholders
         
         # Update status
-        status_placeholder.info("🔄 Starting requirements elaboration process...")
+        status_area_placeholder.info("🔄 Starting requirements elaboration process...")
         
         # Lists to store versions and evaluations for each iteration
         versions = []
@@ -301,15 +301,47 @@ try:
         
         final_document = None
         
+        # Initialize the Requirements tab with a container that will show all versions
+        with requirements_placeholder.container():
+            requirements_content = st.container()
+            with requirements_content:
+                st.markdown("## Requirements Development Process")
+                st.info("The requirements document will be developed iteratively. Each version will be shown below.")
+            
+            # Pre-create placeholders for each iteration
+            status_area_placeholder = st.empty()
+            version_placeholders = []
+            for i in range(1, max_iterations + 1):
+                version_placeholders.append({
+                    "header": st.empty(),
+                    "content": st.empty()
+                })
+
+        # Initialize the Validation tab with a container for all evaluations
+        with validation_placeholder.container():
+            validation_content = st.container()
+            with validation_content:
+                st.markdown("## Requirements Validation Process")
+                st.info("Each version of the requirements will be evaluated. Results will appear here sequentially.")
+            
+            # Pre-create placeholders for each evaluation
+            eval_placeholders = []
+            for i in range(1, max_iterations + 1):
+                eval_placeholders.append({
+                    "header": st.empty(),
+                    "content": st.empty()
+                })
+        
         try:
             for iteration in range(1, max_iterations + 1):
-                # Update status
-                status_placeholder.info(f"🔄 Iteration {iteration}/{max_iterations}: Generating requirements document...")
+                # Update status using the pre-created placeholder
+                status_area_placeholder.info(f"🔄 Iteration {iteration}/{max_iterations}: Generating requirements document...")
                 
-                # Create placeholder for streaming in the Requirements tab
-                with requirements_placeholder.container():
-                    streaming_placeholder = st.empty()
-                    streaming_placeholder.info("💭 Elaborating requirements...")
+                # Use the pre-created placeholders for this iteration
+                current_version = version_placeholders[iteration-1]
+                current_version["header"].markdown(f"### Version {iteration} - Generating...")
+                streaming_placeholder = current_version["content"].empty()
+                streaming_placeholder.info("💭 Elaborating requirements...")
                 
                 # Run the elaborator agent with streaming
                 if DEBUG:
@@ -323,33 +355,52 @@ try:
                     debug_container
                 )
                 
-                # Store this version
+                # Store this version and update the display with the pre-created placeholders
                 versions.append(elaboration_text)
+                current_version["header"].markdown(f"### Version {iteration}")
+                current_version["content"].markdown(elaboration_text)
+                if iteration < max_iterations:
+                    with requirements_content:  # Add divider in the parent container
+                        st.markdown("---")
                 
                 # Create input items for the evaluator
                 eval_inputs = [{"content": create_evaluation_prompt(elaboration_text, language=language), "role": "user"}]
                 
                 # Update status
-                status_placeholder.info(f"🔄 Iteration {iteration}/{max_iterations}: Evaluating document...")
+                status_area_placeholder.info(f"🔄 Iteration {iteration}/{max_iterations}: Evaluating document...")
                 
-                # Run the evaluator agent - show in Validation tab
-                with validation_placeholder.container():
-                    evaluation_placeholder = st.empty()
-                    evaluation_placeholder.info("💭 Evaluating requirements...")
+                # Use the pre-created placeholders for this evaluation
+                current_eval = eval_placeholders[iteration-1]
+                current_eval["header"].markdown(f"### Evaluation of Version {iteration} - In Progress...")
+                eval_streaming = current_eval["content"].empty()
+                eval_streaming.info("💭 Evaluating requirements...")
                 
+                # Run the evaluator agent
                 if DEBUG:
                     with debug_container:
                         st.info(f"Running evaluator agent - iteration {iteration}")
                 evaluation_result = await Runner.run(evaluator_agent, eval_inputs)
                 evaluation = evaluation_result.final_output
                 
-                # Update validation tab with current evaluation
-                with validation_placeholder.container():
-                    st.markdown("## Evaluation in Progress")
-                    st.markdown(f"**Current Iteration:** {iteration}/{max_iterations}")
-                    st.markdown(f"**Score:** {'Pass ✅' if evaluation.score == 'pass' else 'Needs Improvement ⚠️'}")
-                    st.markdown("**Feedback:**")
-                    st.markdown(evaluation.feedback)
+                # Update validation tab with the evaluation using pre-created placeholders
+                eval_content = f"""
+### Evaluation of Version {iteration}
+**Score:** {'Pass ✅' if evaluation.score == 'pass' else 'Needs Improvement ⚠️'}
+
+**Feedback:**
+{evaluation.feedback}
+
+**Areas for Improvement:**
+"""
+                # Add the improvement areas separately rather than in the f-string
+                for area in evaluation.improvement_areas:
+                    eval_content += f"- {area}\n"
+
+                current_eval["header"].empty()  # Clear the "in progress" header
+                current_eval["content"].markdown(eval_content)
+                if iteration < max_iterations:
+                    with validation_content:  # Add divider in the parent container
+                        st.markdown("---")
                 
                 # Store this evaluation
                 evaluations.append(evaluation)
@@ -359,28 +410,48 @@ try:
                     final_document = elaboration_text
                     
                     if evaluation.score == "pass":
-                        status_placeholder.success(f"✅ Requirements document approved on iteration {iteration}!")
+                        status_area_placeholder.success(f"✅ Requirements document approved on iteration {iteration}!")
+                        with requirements_content:
+                            st.success(f"✅ Requirements approved on version {iteration}!")
                     else:
-                        status_placeholder.warning(f"⚠️ Reached maximum iterations ({max_iterations}). Using latest version.")
+                        status_area_placeholder.warning(f"⚠️ Reached maximum iterations ({max_iterations}). Using latest version.")
+                        with requirements_content:
+                            st.warning(f"⚠️ Reached maximum iterations ({max_iterations}). Using version {iteration} as final.")
                     
                     break
                 
                 # Update status for next iteration
-                status_placeholder.info(f"🔄 Iteration {iteration}/{max_iterations}: Incorporating feedback...")
+                status_area_placeholder.info(f"🔄 Iteration {iteration}/{max_iterations}: Incorporating feedback...")
                 
                 # Add the feedback to the input items for the next iteration
                 feedback_prompt = create_feedback_prompt(evaluation, elaboration_prompt, language=language)
                 
                 input_items = [{"content": elaboration_prompt, "role": "user"}, {"content": feedback_prompt, "role": "user"}]
             
+            # Once requirements are finalized, update the Final Specs tab
+            if final_document and final_specs_placeholder:
+                with final_specs_placeholder.container():
+                    st.markdown("## Final Specifications")
+                    st.markdown(final_document)
+                    
+                    # Add download button for the final document
+                    st.download_button(
+                        label="📥 Download Requirements Document",
+                        data=final_document,
+                        file_name="requirements_document.md",
+                        mime="text/markdown",
+                        key="download_final_req"
+                    )
+            
             # Generate use cases if requested and we have a final document
             if create_use_cases and final_document:
-                status_placeholder.info("🔄 Generating use cases from requirements...")
+                status_area_placeholder.info("🔄 Generating use cases from requirements...")
                 
                 # Create placeholder for use case streaming in Use Cases tab
                 with use_cases_placeholder.container():
+                    st.markdown("## Use Cases")
+                    st.info("💭 Creating use cases...")
                     usecase_placeholder = st.empty()
-                    usecase_placeholder.info("💭 Creating use cases...")
                 
                 # Set up input for the handoff agent
                 usecase_input = [
@@ -401,17 +472,36 @@ try:
                     debug_container
                 )
                 
-                status_placeholder.success("✅ Use cases generated successfully!")
+                # Update Use Cases tab with final content
+                with use_cases_placeholder.container():
+                    st.empty()  # Clear the info message
+                    st.markdown("## Use Cases")
+                    st.markdown(use_cases_content)
+                    
+                    # Add download button for use cases
+                    st.download_button(
+                        label="📥 Download Use Cases",
+                        data=use_cases_content,
+                        file_name="use_cases.md",
+                        mime="text/markdown",
+                        key="download_usecases"
+                    )
+                
+                status_area_placeholder.success("✅ Use cases generated successfully!")
+            elif use_cases_placeholder:
+                with use_cases_placeholder.container():
+                    st.info("Use case generation was not enabled. Enable it in the sidebar settings to generate use cases.")
             
             # Generate test cases if requested and we have a final document
             test_cases_content = None
             if create_test_cases and final_document and testcase_agent:
-                status_placeholder.info("🔄 Generating test cases from requirements...")
+                status_area_placeholder.info("🔄 Generating test cases from requirements...")
                 
                 # Create placeholder for test case streaming in Test Cases tab
                 with test_cases_placeholder.container():
+                    st.markdown("## Test Cases")
+                    st.info("💭 Creating test cases...")
                     testcase_placeholder = st.empty()
-                    testcase_placeholder.info("💭 Creating test cases...")
                 
                 # Set up input for the test case agent
                 testcase_input = [
@@ -431,17 +521,36 @@ try:
                     debug_container
                 )
                 
-                status_placeholder.success("✅ Test cases generated successfully!")
+                # Update Test Cases tab with final content
+                with test_cases_placeholder.container():
+                    st.empty()  # Clear the info message
+                    st.markdown("## Test Cases")
+                    st.markdown(test_cases_content)
+                    
+                    # Add download button for test cases
+                    st.download_button(
+                        label="📥 Download Test Cases",
+                        data=test_cases_content,
+                        file_name="test_cases.md",
+                        mime="text/markdown",
+                        key="download_test_cases"
+                    )
+                
+                status_area_placeholder.success("✅ Test cases generated successfully!")
+            elif test_cases_placeholder:
+                with test_cases_placeholder.container():
+                    st.info("Test case generation was not enabled. Enable it in the sidebar settings to generate test cases.")
             
             # Generate code if requested and we have a final document
             code_content = None
             if create_code and final_document and code_agent:
-                status_placeholder.info("🔄 Generating sample code implementation...")
+                status_area_placeholder.info("🔄 Generating sample code implementation...")
                 
                 # Create placeholder for code streaming in Code tab
                 with code_placeholder.container():
+                    st.markdown("## Sample Code")
+                    st.info("💭 Creating code implementation...")
                     code_streaming_placeholder = st.empty()
-                    code_streaming_placeholder.info("💭 Creating code implementation...")
                 
                 # Set up input for the code agent
                 code_input = [
@@ -461,18 +570,37 @@ try:
                     debug_container
                 )
                 
-                status_placeholder.success("✅ Sample code generated successfully!")
+                # Update Code tab with final content
+                with code_placeholder.container():
+                    st.empty()  # Clear the info message
+                    st.markdown("## Sample Code")
+                    st.markdown(code_content)
+                    
+                    # Add download button for code
+                    st.download_button(
+                        label="📥 Download Sample Code",
+                        data=code_content,
+                        file_name="sample_code.md",
+                        mime="text/markdown",
+                        key="download_code"
+                    )
+                
+                status_area_placeholder.success("✅ Sample code generated successfully!")
+            elif code_placeholder:
+                with code_placeholder.container():
+                    st.info("Code generation was not enabled. Enable it in the sidebar settings to generate sample code.")
             
             # Generate architecture diagram if requested and we have a final document
             diagram_output = None
             diagram_image_path = None
             if create_diagram and final_document and diagram_agent:
-                status_placeholder.info(f"🔄 Generating architecture diagram for {cloud_env}...")
+                status_area_placeholder.info(f"🔄 Generating architecture diagram for {cloud_env}...")
                 
                 # Create placeholder for diagram streaming in Architecture tab
                 with architecture_placeholder.container():
+                    st.markdown("## Architecture Diagram")
+                    st.info("💭 Creating architecture diagram...")
                     diagram_placeholder = st.empty()
-                    diagram_placeholder.info("💭 Creating architecture diagram...")
                 
                 # Set up input for the diagram agent
                 diagram_input = [
@@ -494,228 +622,98 @@ try:
                             st.info(f"Diagram output: {diagram_output}")
                     
                     # Attempt to render the diagram
-                    if diagram_output and hasattr(diagram_output, 'imports'):
-                        # This is our new structured output
-                        with architecture_placeholder.container():
-                            diagram_placeholder.info("💭 Generating and rendering diagram from structured output...")
-                        
-                        try:
-                            # Use our new render_structured_diagram function
-                            success, result = render_structured_diagram(diagram_output)
+                    with architecture_placeholder.container():
+                        if diagram_output and hasattr(diagram_output, 'imports'):
+                            # This is our new structured output
+                            st.info("💭 Generating and rendering diagram from structured output...")
                             
-                            if success:
-                                diagram_image_path = result
-                                with architecture_placeholder.container():
-                                    diagram_placeholder.success("✅ Diagram rendered successfully!")
-                            else:
-                                with architecture_placeholder.container():
-                                    diagram_placeholder.error(f"⚠️ {result}")
-                        except Exception as e:
-                            with architecture_placeholder.container():
-                                diagram_placeholder.error(f"⚠️ Error rendering diagram: {str(e)}")
-                            if DEBUG:
-                                with debug_container:
-                                    st.error(f"Diagram rendering error: {traceback.format_exc()}")
-                    
-                    # Compatibility with old format - will be removed once transition is complete
-                    elif diagram_output and hasattr(diagram_output, 'diagram_code'):
-                        # Old direct code approach
-                        diagram_code = diagram_output.diagram_code
-                        with architecture_placeholder.container():
-                            diagram_placeholder.info("💭 Validating and rendering diagram...")
-                        
-                        # First try to validate and render
-                        try:
-                            success, result = render_diagram(diagram_code)
-                            
-                            # If validation fails, try auto-correction using the LLM as judge pattern
-                            if not success:
-                                with architecture_placeholder.container():
-                                    diagram_placeholder.warning(f"⚠️ {result}")
-                                    diagram_placeholder.info("💭 Attempting to auto-correct diagram code...")
+                            try:
+                                # Use our new render_structured_diagram function
+                                success, result = render_structured_diagram(diagram_output)
                                 
-                                # Use the diagram agent to auto-correct
-                                correction_success, corrected_result = await auto_correct_diagram_code(
-                                    diagram_code, 
-                                    final_document, 
-                                    app_type, 
-                                    cloud_env, 
-                                    diagram_agent
-                                )
-                                
-                                if correction_success:
-                                    # Update the diagram code with the corrected version
-                                    diagram_code = corrected_result
-                                    diagram_output.diagram_code = corrected_result
-                                    
-                                    # Try rendering again with the corrected code
-                                    success, result = render_diagram(diagram_code)
-                                    if success:
-                                        diagram_image_path = result
-                                        with architecture_placeholder.container():
-                                            diagram_placeholder.success("✅ Diagram auto-corrected and rendered successfully!")
-                                    else:
-                                        with architecture_placeholder.container():
-                                            diagram_placeholder.error(f"⚠️ Auto-correction failed to resolve all issues: {result}")
+                                if success:
+                                    diagram_image_path = result
+                                    st.success("✅ Diagram rendered successfully!")
                                 else:
-                                    with architecture_placeholder.container():
-                                        diagram_placeholder.error(f"⚠️ Auto-correction failed: {corrected_result}")
-                            else:
-                                # Original code was valid
-                                diagram_image_path = result
-                                with architecture_placeholder.container():
-                                    diagram_placeholder.success("✅ Diagram rendered successfully!")
+                                    st.error(f"⚠️ {result}")
+                            except Exception as e:
+                                st.error(f"⚠️ Error rendering diagram: {str(e)}")
+                                if DEBUG:
+                                    with debug_container:
+                                        st.error(f"Diagram rendering error: {traceback.format_exc()}")
+                        
+                        # Compatibility with old format - will be removed once transition is complete
+                        elif diagram_output and hasattr(diagram_output, 'diagram_code'):
+                            # Old direct code approach
+                            diagram_code = diagram_output.diagram_code
+                            st.info("💭 Validating and rendering diagram...")
+                            
+                            # First try to validate and render
+                            try:
+                                success, result = render_diagram(diagram_code)
                                 
-                        except Exception as e:
-                            with architecture_placeholder.container():
-                                diagram_placeholder.error(f"⚠️ Error rendering diagram: {str(e)}")
+                                # If validation fails, try auto-correction using the LLM as judge pattern
+                                if not success:
+                                    st.warning(f"⚠️ {result}")
+                                    st.info("💭 Attempting to auto-correct diagram code...")
+                                    
+                                    # Use the diagram agent to auto-correct
+                                    correction_success, corrected_result = await auto_correct_diagram_code(
+                                        diagram_code, 
+                                        final_document, 
+                                        app_type, 
+                                        cloud_env, 
+                                        diagram_agent
+                                    )
+                                    
+                                    if correction_success:
+                                        # Update the diagram code with the corrected version
+                                        diagram_code = corrected_result
+                                        diagram_output.diagram_code = corrected_result
+                                        
+                                        # Try rendering again with the corrected code
+                                        success, result = render_diagram(diagram_code)
+                                        if success:
+                                            diagram_image_path = result
+                                            st.success("✅ Diagram auto-corrected and rendered successfully!")
+                                        else:
+                                            st.error(f"⚠️ Auto-correction failed to resolve all issues: {result}")
+                                    else:
+                                        st.error(f"⚠️ Auto-correction failed: {corrected_result}")
+                                else:
+                                    # Original code was valid
+                                    diagram_image_path = result
+                                    st.success("✅ Diagram rendered successfully!")
+                                
+                            except Exception as e:
+                                st.error(f"⚠️ Error rendering diagram: {str(e)}")
+                                if DEBUG:
+                                    with debug_container:
+                                        st.error(f"Diagram rendering error: {traceback.format_exc()}")
+                        else:
+                            st.error("⚠️ Invalid diagram output format")
                             if DEBUG:
                                 with debug_container:
-                                    st.error(f"Diagram rendering error: {traceback.format_exc()}")
-                    else:
+                                    st.error(f"Invalid diagram output format: {diagram_output}")
+                            
+                    # Update Architecture tab with the final diagram
+                    if diagram_output and diagram_image_path and os.path.exists(diagram_image_path):
                         with architecture_placeholder.container():
-                            diagram_placeholder.error("⚠️ Invalid diagram output format")
-                        if DEBUG:
-                            with debug_container:
-                                st.error(f"Invalid diagram output format: {diagram_output}")
-                except Exception as e:
-                    with architecture_placeholder.container():
-                        diagram_placeholder.error(f"⚠️ Error generating diagram: {str(e)}")
-                    if DEBUG:
-                        with debug_container:
-                            st.error(f"Diagram generation error: {traceback.format_exc()}")
-                
-                status_placeholder.success("✅ Architecture diagram processing completed!")
-            
-            # Update all tabs with final content
-            if versions and tab_placeholders:
-                status_placeholder.success("✅ Requirements document process completed!")
-                
-                # Update Requirements tab
-                if final_document and requirements_placeholder:
-                    with requirements_placeholder.container():
-                        st.empty()  # Clear the streaming content
-                        st.markdown("## Elaborated Functional Requirements")
-                        st.markdown(final_document)
-                        
-                        # Add download button for the final document
-                        st.download_button(
-                            label="📥 Download Requirements Document",
-                            data=final_document,
-                            file_name="requirements_document.md",
-                            mime="text/markdown",
-                            key="download_final_req"
-                        )
-                
-                # Update Validation tab
-                if evaluations and validation_placeholder:
-                    with validation_placeholder.container():
-                        st.empty()  # Clear any existing content
-                        st.markdown("## Requirements Validation")
-                        
-                        final_eval = evaluations[-1]
-                        st.markdown(f"### Final Evaluation Score: {'Passed ✅' if final_eval.score == 'pass' else 'Needs Improvement ⚠️'}")
-                        
-                        st.markdown("### Feedback")
-                        st.markdown(final_eval.feedback)
-                        
-                        st.markdown("### Areas for Improvement")
-                        for area in final_eval.improvement_areas:
-                            st.markdown(f"- {area}")
-                        
-                        # Show iteration history
-                        with st.expander("View Iteration History", expanded=False):
-                            for i, eval in enumerate(evaluations):
-                                st.markdown(f"#### Version {i+1}")
-                                st.markdown(f"**Score:** {'Pass ✅' if eval.score == 'pass' else 'Needs Improvement ⚠️'}")
-                                st.markdown(f"**Feedback:** {eval.feedback}")
-                
-                # Update Final Specs tab
-                if final_document and final_specs_placeholder:
-                    with final_specs_placeholder.container():
-                        st.empty()  # Clear any existing content
-                        st.markdown("## Final Specifications")
-                        st.markdown(final_document)
-                
-                # Update Use Cases tab
-                if use_cases_content and use_cases_placeholder:
-                    with use_cases_placeholder.container():
-                        st.empty()  # Clear streaming content
-                        st.markdown("## Use Cases")
-                        st.markdown(use_cases_content)
-                        
-                        # Add download button for use cases
-                        st.download_button(
-                            label="📥 Download Use Cases",
-                            data=use_cases_content,
-                            file_name="use_cases.md",
-                            mime="text/markdown",
-                            key="download_usecases"
-                        )
-                elif use_cases_placeholder:
-                    with use_cases_placeholder.container():
-                        st.empty()  # Clear any previous content
-                        st.info("Use case generation was not enabled. Enable it in the sidebar settings to generate use cases.")
-                
-                # Update Test Cases tab
-                if test_cases_content and test_cases_placeholder:
-                    with test_cases_placeholder.container():
-                        st.empty()  # Clear streaming content
-                        st.markdown("## Test Cases")
-                        st.markdown(test_cases_content)
-                        
-                        # Add download button for test cases
-                        st.download_button(
-                            label="📥 Download Test Cases",
-                            data=test_cases_content,
-                            file_name="test_cases.md",
-                            mime="text/markdown",
-                            key="download_test_cases"
-                        )
-                elif test_cases_placeholder:
-                    with test_cases_placeholder.container():
-                        st.empty()  # Clear any previous content
-                        st.info("Test case generation was not enabled. Enable it in the sidebar settings to generate test cases.")
-                
-                # Update Code tab
-                if code_content and code_placeholder:
-                    with code_placeholder.container():
-                        st.empty()  # Clear streaming content
-                        st.markdown("## Sample Code")
-                        st.markdown(code_content)
-                        
-                        # Add download button for code
-                        st.download_button(
-                            label="📥 Download Sample Code",
-                            data=code_content,
-                            file_name="sample_code.md",
-                            mime="text/markdown",
-                            key="download_code"
-                        )
-                elif code_placeholder:
-                    with code_placeholder.container():
-                        st.empty()  # Clear any previous content
-                        st.info("Code generation was not enabled. Enable it in the sidebar settings to generate sample code.")
-                
-                # Update Architecture tab
-                if diagram_output and architecture_placeholder:
-                    with architecture_placeholder.container():
-                        st.empty()  # Clear streaming content
-                        st.markdown("## Architecture Diagram")
-                        
-                        try:
-                            # Get attributes from DiagramOutput class
-                            explanation = diagram_output.explanation
-                            diagram_code = diagram_output.diagram_code
-                            diagram_type = diagram_output.diagram_type
+                            st.empty()  # Clear previous messages
+                            st.markdown("## Architecture Diagram")
                             
-                            # Display diagram type and explanation
-                            st.markdown(f"### {diagram_type}")
-                            st.markdown("### Diagram Explanation")
-                            st.markdown(explanation)
-                            
-                            # Display rendered image if available
-                            if diagram_image_path and os.path.exists(diagram_image_path):
+                            try:
+                                # Get attributes from DiagramOutput class
+                                explanation = diagram_output.explanation
+                                diagram_code = diagram_output.diagram_code
+                                diagram_type = diagram_output.diagram_type
+                                
+                                # Display diagram type and explanation
+                                st.markdown(f"### {diagram_type}")
+                                st.markdown("### Diagram Explanation")
+                                st.markdown(explanation)
+                                
+                                # Display rendered image
                                 st.markdown("### Diagram")
                                 st.image(diagram_image_path, caption=f"{app_type} Architecture on {cloud_env}")
                                 
@@ -728,34 +726,45 @@ try:
                                         mime="image/png",
                                         key="download_diagram_img"
                                     )
-                            
-                            # Display the code
-                            st.markdown("### Diagram Code")
-                            st.code(diagram_code, language="python")
-                            
-                            # Add download button for the diagram code
-                            st.download_button(
-                                label="📥 Download Diagram Code",
-                                data=diagram_code,
-                                file_name="architecture_diagram.py",
-                                mime="text/plain",
-                                key="download_diagram_code"
-                            )
-                        except Exception as e:
-                            st.error(f"Error displaying diagram: {str(e)}")
-                            if DEBUG:
-                                with st.expander("Error Details", expanded=False):
-                                    st.error(traceback.format_exc())
-                        else:
-                            with architecture_placeholder.container():
-                                st.empty()  # Clear any previous content
-                                st.info("Diagram generation was not enabled. Enable it in the sidebar settings to generate architecture diagrams.")
+                                
+                                # Display the code
+                                st.markdown("### Diagram Code")
+                                st.code(diagram_code, language="python")
+                                
+                                # Add download button for the diagram code
+                                st.download_button(
+                                    label="📥 Download Diagram Code",
+                                    data=diagram_code,
+                                    file_name="architecture_diagram.py",
+                                    mime="text/plain",
+                                    key="download_diagram_code"
+                                )
+                            except Exception as e:
+                                st.error(f"Error displaying diagram: {str(e)}")
+                                if DEBUG:
+                                    with st.expander("Error Details", expanded=False):
+                                        st.error(traceback.format_exc())
+                    else:
+                        with architecture_placeholder.container():
+                            st.info("Diagram generation was not enabled. Enable it in the sidebar settings to generate architecture diagrams.")
                 
+                except Exception as e:
+                    with architecture_placeholder.container():
+                        st.error(f"⚠️ Error generating diagram: {str(e)}")
+                    if DEBUG:
+                        with debug_container:
+                            st.error(f"Diagram generation error: {traceback.format_exc()}")
+                
+                status_area_placeholder.success("✅ Architecture diagram processing completed!")
+            elif architecture_placeholder:
+                with architecture_placeholder.container():
+                    st.info("Diagram generation was not enabled. Enable it in the sidebar settings to generate architecture diagrams.")
+            
             return final_document
             
         except Exception as e:
             error_msg = f"An error occurred: {str(e)}"
-            status_placeholder.error(error_msg)
+            status_area_placeholder.error(error_msg)
             if DEBUG:
                 with debug_container:
                     st.error(f"Elaboration error: {traceback.format_exc()}")
@@ -788,8 +797,8 @@ try:
                 
                 # Create a status placeholder in the Requirements tab
                 with requirements_placeholder.container():
-                    status_placeholder = st.empty()
-                    status_placeholder.info("🔄 Processing your requirements. Please wait...")
+                    status_area_placeholder = st.empty()
+                    status_area_placeholder.info("🔄 Processing your requirements. Please wait...")
                 
                 # Display a processing message in each tab
                 for placeholder in [validation_placeholder, final_specs_placeholder, 
@@ -803,7 +812,7 @@ try:
                     final_document = await iterative_requirements_elaboration(
                         prompt, 
                         app_type, 
-                        status_placeholder,  # Pass the status placeholder instead of a container
+                        status_area_placeholder,  # Pass the status placeholder instead of a container
                         model=model, 
                         max_iterations=max_iterations,
                         create_use_cases=generate_use_cases,
