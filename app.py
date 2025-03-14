@@ -156,7 +156,7 @@ try:
         "Maximum Iterations:",
         min_value=1,
         max_value=5,
-        value=3,
+        value=2,
         help="Maximum number of refinement cycles"
     )
     
@@ -528,64 +528,9 @@ try:
                     st.markdown("## Test Cases")
                     
                     if test_cases_content:
-                        # Extract and render code blocks separately, but keep markdown intact
-                        # This preserves formatting while properly highlighting code
-                        content_parts = []
-                        code_blocks = []
-                        
-                        # Find all code blocks with regex
-                        pattern = r'```(?:\w+)?\n(.*?)```'
-                        matches = re.finditer(pattern, test_cases_content, re.DOTALL)
-                        
-                        # Extract code blocks and their positions
-                        for match in matches:
-                            code_blocks.append({
-                                'start': match.start(),
-                                'end': match.end(),
-                                'content': match.group(1),
-                                'full_match': match.group(0)
-                            })
-                        
-                        # If there are code blocks, handle them specially
-                        if code_blocks:
-                            last_end = 0
-                            for block in code_blocks:
-                                # Add text before code block
-                                if block['start'] > last_end:
-                                    content_parts.append({
-                                        'type': 'markdown',
-                                        'content': test_cases_content[last_end:block['start']]
-                                    })
-                                
-                                # Determine language if specified
-                                lang_match = re.match(r'```(\w+)?', block['full_match'])
-                                lang = lang_match.group(1) if lang_match and lang_match.group(1) else "text"
-                                
-                                # Add code block
-                                content_parts.append({
-                                    'type': 'code',
-                                    'content': block['content'],
-                                    'language': lang
-                                })
-                                
-                                last_end = block['end']
-                            
-                            # Add any remaining text after the last code block
-                            if last_end < len(test_cases_content):
-                                content_parts.append({
-                                    'type': 'markdown',
-                                    'content': test_cases_content[last_end:]
-                                })
-                            
-                            # Render each part with the appropriate Streamlit function
-                            for part in content_parts:
-                                if part['type'] == 'markdown':
-                                    st.markdown(part['content'])
-                                else:
-                                    st.code(part['content'], language=part['language'])
-                        else:
-                            # No code blocks, render as regular markdown
-                            st.markdown(test_cases_content)
+                        # Simply render the entire content as markdown, exactly like the Elaborator does
+                        # This preserves all context and formatting relationships
+                        st.markdown(test_cases_content)
                         
                         # Add download button for test cases
                         st.download_button(
@@ -638,64 +583,9 @@ try:
                     st.markdown("## Sample Code")
                     
                     if code_content:
-                        # Extract and render code blocks separately, but keep markdown intact
-                        # This preserves formatting while properly highlighting code
-                        content_parts = []
-                        code_blocks = []
-                        
-                        # Find all code blocks with regex
-                        pattern = r'```(?:\w+)?\n(.*?)```'
-                        matches = re.finditer(pattern, code_content, re.DOTALL)
-                        
-                        # Extract code blocks and their positions
-                        for match in matches:
-                            code_blocks.append({
-                                'start': match.start(),
-                                'end': match.end(),
-                                'content': match.group(1),
-                                'full_match': match.group(0)
-                            })
-                        
-                        # If there are code blocks, handle them specially
-                        if code_blocks:
-                            last_end = 0
-                            for block in code_blocks:
-                                # Add text before code block
-                                if block['start'] > last_end:
-                                    content_parts.append({
-                                        'type': 'markdown',
-                                        'content': code_content[last_end:block['start']]
-                                    })
-                                
-                                # Determine language if specified
-                                lang_match = re.match(r'```(\w+)?', block['full_match'])
-                                lang = lang_match.group(1) if lang_match and lang_match.group(1) else "text"
-                                
-                                # Add code block
-                                content_parts.append({
-                                    'type': 'code',
-                                    'content': block['content'],
-                                    'language': lang
-                                })
-                                
-                                last_end = block['end']
-                            
-                            # Add any remaining text after the last code block
-                            if last_end < len(code_content):
-                                content_parts.append({
-                                    'type': 'markdown',
-                                    'content': code_content[last_end:]
-                                })
-                            
-                            # Render each part with the appropriate Streamlit function
-                            for part in content_parts:
-                                if part['type'] == 'markdown':
-                                    st.markdown(part['content'])
-                                else:
-                                    st.code(part['content'], language=part['language'])
-                        else:
-                            # No code blocks, render as regular markdown
-                            st.markdown(code_content)
+                        # Simply render the entire content as markdown, exactly like the Elaborator does
+                        # This preserves all context and formatting relationships
+                        st.markdown(code_content)
                         
                         # Add download button for code
                         st.download_button(
@@ -876,7 +766,8 @@ try:
                 status_area_placeholder.success("✅ Architecture diagram processing completed!")
             elif architecture_placeholder:
                 with architecture_placeholder.container():
-                    st.info("Diagram generation was not enabled. Enable it in the sidebar settings to generate architecture diagrams.")
+                    st.markdown("## Architecture Diagram")
+                    st.info("Architecture diagram generation was not enabled. Enable it in the sidebar settings to generate architecture diagrams.")
             
             return final_document
             
