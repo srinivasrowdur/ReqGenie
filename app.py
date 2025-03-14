@@ -11,6 +11,7 @@ import asyncio
 import traceback
 import streamlit as st
 from dotenv import load_dotenv
+import re
 
 # Import utilities
 from utils.async_helpers import run_async
@@ -164,10 +165,10 @@ try:
                                            help="Automatically generate use cases after requirements are finalized")
     
     # Add options for test cases and code generation
-    generate_test_cases = st.sidebar.checkbox("Generate Test Cases", value=False,
+    generate_test_cases = st.sidebar.checkbox("Generate Test Cases", value=True,
                                             help="Automatically generate test cases after requirements are finalized")
     
-    generate_code = st.sidebar.checkbox("Generate Sample Code", value=False,
+    generate_code = st.sidebar.checkbox("Generate Sample Code", value=True,
                                       help="Automatically generate sample code implementation after requirements are finalized")
     
     # Add option for diagram generation
@@ -525,16 +526,77 @@ try:
                 with test_cases_placeholder.container():
                     st.empty()  # Clear the info message
                     st.markdown("## Test Cases")
-                    st.markdown(test_cases_content)
                     
-                    # Add download button for test cases
-                    st.download_button(
-                        label="📥 Download Test Cases",
-                        data=test_cases_content,
-                        file_name="test_cases.md",
-                        mime="text/markdown",
-                        key="download_test_cases"
-                    )
+                    if test_cases_content:
+                        # Extract and render code blocks separately, but keep markdown intact
+                        # This preserves formatting while properly highlighting code
+                        content_parts = []
+                        code_blocks = []
+                        
+                        # Find all code blocks with regex
+                        pattern = r'```(?:\w+)?\n(.*?)```'
+                        matches = re.finditer(pattern, test_cases_content, re.DOTALL)
+                        
+                        # Extract code blocks and their positions
+                        for match in matches:
+                            code_blocks.append({
+                                'start': match.start(),
+                                'end': match.end(),
+                                'content': match.group(1),
+                                'full_match': match.group(0)
+                            })
+                        
+                        # If there are code blocks, handle them specially
+                        if code_blocks:
+                            last_end = 0
+                            for block in code_blocks:
+                                # Add text before code block
+                                if block['start'] > last_end:
+                                    content_parts.append({
+                                        'type': 'markdown',
+                                        'content': test_cases_content[last_end:block['start']]
+                                    })
+                                
+                                # Determine language if specified
+                                lang_match = re.match(r'```(\w+)?', block['full_match'])
+                                lang = lang_match.group(1) if lang_match and lang_match.group(1) else "text"
+                                
+                                # Add code block
+                                content_parts.append({
+                                    'type': 'code',
+                                    'content': block['content'],
+                                    'language': lang
+                                })
+                                
+                                last_end = block['end']
+                            
+                            # Add any remaining text after the last code block
+                            if last_end < len(test_cases_content):
+                                content_parts.append({
+                                    'type': 'markdown',
+                                    'content': test_cases_content[last_end:]
+                                })
+                            
+                            # Render each part with the appropriate Streamlit function
+                            for part in content_parts:
+                                if part['type'] == 'markdown':
+                                    st.markdown(part['content'])
+                                else:
+                                    st.code(part['content'], language=part['language'])
+                        else:
+                            # No code blocks, render as regular markdown
+                            st.markdown(test_cases_content)
+                        
+                        # Add download button for test cases
+                        st.download_button(
+                            label="📥 Download Test Cases",
+                            data=test_cases_content,
+                            file_name="test_cases.md",
+                            mime="text/markdown",
+                            key="download_test_cases"
+                        )
+                    else:
+                        st.info("No test cases were generated.")
                 
                 status_area_placeholder.success("✅ Test cases generated successfully!")
             elif test_cases_placeholder:
@@ -574,21 +636,79 @@ try:
                 with code_placeholder.container():
                     st.empty()  # Clear the info message
                     st.markdown("## Sample Code")
-                    st.markdown(code_content)
                     
-                    # Add download button for code
-                    st.download_button(
-                        label="📥 Download Sample Code",
-                        data=code_content,
-                        file_name="sample_code.md",
-                        mime="text/markdown",
-                        key="download_code"
-                    )
-                
-                status_area_placeholder.success("✅ Sample code generated successfully!")
-            elif code_placeholder:
-                with code_placeholder.container():
-                    st.info("Code generation was not enabled. Enable it in the sidebar settings to generate sample code.")
+                    if code_content:
+                        # Extract and render code blocks separately, but keep markdown intact
+                        # This preserves formatting while properly highlighting code
+                        content_parts = []
+                        code_blocks = []
+                        
+                        # Find all code blocks with regex
+                        pattern = r'```(?:\w+)?\n(.*?)```'
+                        matches = re.finditer(pattern, code_content, re.DOTALL)
+                        
+                        # Extract code blocks and their positions
+                        for match in matches:
+                            code_blocks.append({
+                                'start': match.start(),
+                                'end': match.end(),
+                                'content': match.group(1),
+                                'full_match': match.group(0)
+                            })
+                        
+                        # If there are code blocks, handle them specially
+                        if code_blocks:
+                            last_end = 0
+                            for block in code_blocks:
+                                # Add text before code block
+                                if block['start'] > last_end:
+                                    content_parts.append({
+                                        'type': 'markdown',
+                                        'content': code_content[last_end:block['start']]
+                                    })
+                                
+                                # Determine language if specified
+                                lang_match = re.match(r'```(\w+)?', block['full_match'])
+                                lang = lang_match.group(1) if lang_match and lang_match.group(1) else "text"
+                                
+                                # Add code block
+                                content_parts.append({
+                                    'type': 'code',
+                                    'content': block['content'],
+                                    'language': lang
+                                })
+                                
+                                last_end = block['end']
+                            
+                            # Add any remaining text after the last code block
+                            if last_end < len(code_content):
+                                content_parts.append({
+                                    'type': 'markdown',
+                                    'content': code_content[last_end:]
+                                })
+                            
+                            # Render each part with the appropriate Streamlit function
+                            for part in content_parts:
+                                if part['type'] == 'markdown':
+                                    st.markdown(part['content'])
+                                else:
+                                    st.code(part['content'], language=part['language'])
+                        else:
+                            # No code blocks, render as regular markdown
+                            st.markdown(code_content)
+                        
+                        # Add download button for code
+                        st.download_button(
+                            label="📥 Download Sample Code",
+                            data=code_content,
+                            file_name="sample_code.md",
+                            mime="text/markdown",
+                            key="download_code"
+                        )
+                        
+                        status_area_placeholder.success("✅ Sample code generated successfully!")
+                    else:
+                        st.info("No code content available.")
             
             # Generate architecture diagram if requested and we have a final document
             diagram_output = None
@@ -679,11 +799,9 @@ try:
                                         else:
                                             st.error(f"⚠️ Auto-correction failed to resolve all issues: {result}")
                                     else:
-                                        st.error(f"⚠️ Auto-correction failed: {corrected_result}")
-                                else:
-                                    # Original code was valid
-                                    diagram_image_path = result
-                                    st.success("✅ Diagram rendered successfully!")
+                                        # Original code was valid
+                                        diagram_image_path = result
+                                        st.success("✅ Diagram rendered successfully!")
                                 
                             except Exception as e:
                                 st.error(f"⚠️ Error rendering diagram: {str(e)}")
