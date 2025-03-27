@@ -307,7 +307,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Create UI
-st.title("🧞‍♂️ Sales Engagement Genie ✨")
+st.title("🧞‍♂️ Communication Genie ✨")
 st.write("Analyze personality profiles to enhance your sales conversations")
 
 # Add settings in sidebar
