@@ -146,7 +146,7 @@ try:
     # Model selection
     model = st.sidebar.selectbox(
         "Model:",
-        ["o3-mini", "gpt-3.5-turbo-0125", "gpt-4o"],
+        ["o3-mini", "gpt-3.5-turbo-0125", "gpt-4o", "gpt-4.1-mini"],
         index=0,
         help="Choose the model to use for all agents"
     )
