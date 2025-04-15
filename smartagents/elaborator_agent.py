@@ -5,7 +5,7 @@ Requirements elaborator agent responsible for creating detailed requirements doc
 from agents import Agent
 from prompts.elaborator_prompt import REQUIREMENTS_SYSTEM_PROMPT
 
-def create_elaborator_agent(model="o3-mini", language="English"):
+def create_elaborator_agent(model="gpt-4.1-mini", language="English"):
     """Create a requirements elaborator agent.
     
     Args:
