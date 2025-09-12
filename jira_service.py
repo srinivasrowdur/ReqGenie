@@ -137,7 +137,7 @@ class JiraService:
         return response["key"]
 
     def create_story(self, project_key: str, summary: str, description: str, 
-                    epic_key: str, story_points: int = None) -> str:
+                    epic_key: str = None, story_points: int = None) -> str:
         """Create a story and return its key."""
         # Get issue types if not already fetched
         if not self.issue_types:
@@ -156,6 +156,14 @@ class JiraService:
                 "labels": ["ReqGenie"]
             }
         }
+        
+        # Add epic link if provided
+        if epic_key:
+            payload["fields"]["parent"] = {"key": epic_key}
+        
+        # Add story points if provided
+        if story_points:
+            payload["fields"]["customfield_10016"] = story_points  # Common story points field ID
         
         response = self.create_issue(payload)
         return response["key"]

@@ -316,8 +316,9 @@ if st.button("Analyze"):
                         # Get the complete review content
                         review_text = ''.join(filter(None, review_content))
                         
-                        # Create Jira tickets
-                        jira_stream = jira_creator.create_tickets(
+                        # Generate Jira ticket structure
+                        st.sidebar.info("Generating Jira ticket structure...")
+                        jira_tickets_data = jira_creator.create_tickets(
                             project_key=jira_project,
                             component=jira_component,
                             requirement=requirement,
@@ -327,16 +328,84 @@ if st.button("Analyze"):
                             nfr_analysis=nfr_analysis if has_nfrs else None
                         )
                         
-                        # Show progress in sidebar
-                        for chunk in jira_stream:
-                            if isinstance(chunk, dict) and "content" in chunk:
-                                st.sidebar.info(chunk["content"])
-                            elif isinstance(chunk, str):
-                                st.sidebar.info(chunk)
+                        # Debug: Show the generated ticket structure
+                        with st.sidebar.expander("Debug: Generated Ticket Structure"):
+                            st.json(jira_tickets_data)
                         
-                        st.sidebar.success("✅ Jira Tickets Created")
+                        # Initialize Jira service
+                        jira_service = JiraService()
+                        
+                        # Create actual tickets in Jira
+                        created_tickets = []
+                        
+                        # Create Epic first
+                        if "epic" in jira_tickets_data:
+                            epic_data = jira_tickets_data["epic"]
+                            epic_key = jira_service.create_epic(
+                                project_key=jira_project,
+                                summary=epic_data["summary"],
+                                description=epic_data["description"]
+                            )
+                            created_tickets.append(f"Epic: {epic_key}")
+                            st.sidebar.info(f"Created Epic: {epic_key}")
+                        
+                        # Create Stories and track their keys
+                        story_keys = []
+                        if "stories" in jira_tickets_data:
+                            for story_data in jira_tickets_data["stories"]:
+                                story_key = jira_service.create_story(
+                                    project_key=jira_project,
+                                    summary=story_data["summary"],
+                                    description=story_data["description"],
+                                    epic_key=epic_key if "epic" in jira_tickets_data else None,
+                                    story_points=story_data.get("story_points")
+                                )
+                                story_keys.append(story_key)
+                                created_tickets.append(f"Story: {story_key}")
+                                st.sidebar.info(f"Created Story: {story_key}")
+                        
+                        # Create Tasks
+                        if "tasks" in jira_tickets_data:
+                            for task_data in jira_tickets_data["tasks"]:
+                                # Link to first story if available, otherwise to epic
+                                parent_key = story_keys[0] if story_keys else (epic_key if "epic" in jira_tickets_data else None)
+                                
+                                task_key = jira_service.create_task(
+                                    project_key=jira_project,
+                                    summary=task_data["summary"],
+                                    description=task_data["description"],
+                                    parent_key=parent_key
+                                )
+                                created_tickets.append(f"Task: {task_key}")
+                                st.sidebar.info(f"Created Task: {task_key}")
+                        
+                        # Create Test cases as tasks
+                        if "tests" in jira_tickets_data:
+                            for test_data in jira_tickets_data["tests"]:
+                                # Link to first story if available, otherwise to epic
+                                parent_key = story_keys[0] if story_keys else (epic_key if "epic" in jira_tickets_data else None)
+                                
+                                test_key = jira_service.create_task(
+                                    project_key=jira_project,
+                                    summary=f"Test: {test_data['summary']}",
+                                    description=test_data["description"],
+                                    parent_key=parent_key
+                                )
+                                created_tickets.append(f"Test: {test_key}")
+                                st.sidebar.info(f"Created Test: {test_key}")
+                        
+                        # Show summary
+                        if created_tickets:
+                            st.sidebar.success(f"✅ Created {len(created_tickets)} Jira tickets")
+                            with st.sidebar.expander("View Created Tickets"):
+                                for ticket in created_tickets:
+                                    st.write(ticket)
+                        else:
+                            st.sidebar.warning("⚠️ No tickets were created")
+                            
                     except Exception as e:
                         st.sidebar.error(f"Failed to create Jira tickets: {str(e)}")
+                        st.error(f"Jira Error Details: {str(e)}")
 
             # Generate Architecture Diagram
             with tabs[current_tab]:
